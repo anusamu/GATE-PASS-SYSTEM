@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import MenuIcon from "@mui/icons-material/Menu";
 import {
   Box,
   Grid,
@@ -9,13 +10,12 @@ import {
   Button,
   Stack,
   Dialog,
+  IconButton,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
   MenuItem,
-  Chip,
-  Divider,
 } from "@mui/material";
 
 import {
@@ -26,21 +26,22 @@ import {
   AlertCircle,
   CheckCircle2,
   History,
-  Mail,
-  User,
-  Package,
-  Calendar,
 } from "lucide-react";
 
-/* ===========================
-   API CONFIG
-=========================== */
+import PassCard from "../components/PassCard";
+import ProfileMenu from "../components/ProfileMenu";
+import Sidebar from "../components/SideBar";
+
 const API = "http://localhost:5000/api/auth";
+const GRADIENT = "linear-gradient(135deg,#2563eb,#22c55e)";
 
 const Dashboard = () => {
   const [passes, setPasses] = useState([]);
   const [showPassModal, setShowPassModal] = useState(false);
-  const [loading, setLoading] = useState(false); // Added loading state
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const [formData, setFormData] = useState({
     externalPersonName: "",
@@ -52,139 +53,143 @@ const Dashboard = () => {
   });
 
   const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role") || "staff";
+  const user = { role };
 
-  // Fetch passes on component mount
   useEffect(() => {
-    fetchMyPasses();
+    if (token) fetchPasses();
   }, []);
 
-  const fetchMyPasses = async () => {
+  const fetchPasses = async () => {
     try {
-      const res = await axios.get(`${API}/staff/mypass`, {
+      const endpoint =
+        role === "hod"
+          ? `${API}/hod/passes`
+          : `${API}/staff/mypass`;
+
+      const res = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Use spread to avoid mutation and handle possible nulls
-      setPasses([...res.data].reverse());
+
+      setPasses(res.data.reverse());
     } catch (err) {
-      console.error("Fetch Error:", err.response?.data || err.message);
+      console.error(err.message);
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const recentPasses = passes.slice(0, 4);
 
-  /* ===========================
-     SUBMIT PASS (Corrected)
-  =========================== */
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
   const handleSubmitPass = async () => {
     try {
       setLoading(true);
-      
+
       const payload = {
         ...formData,
-        // Only send date if it's returnable
-        returnDateTime: formData.passType === "RETURNABLE" ? formData.returnDateTime : null,
+        returnDateTime:
+          formData.passType === "RETURNABLE"
+            ? formData.returnDateTime
+            : null,
       };
 
-      // FIX: Use template literals for the URL
       const res = await axios.post(`${API}/staff/create`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // ✅ ADD TO LIST (Ensure we grab the pass object from response)
-      const createdPass = res.data.pass || res.data;
-      setPasses((prev) => [createdPass, ...prev]);
-
-      // RESET FORM
-      setFormData({
-        externalPersonName: "",
-        externalPersonEmail: "",
-        assetName: "",
-        assetSerialNo: "",
-        passType: "",
-        returnDateTime: "",
-      });
-
+      setPasses((prev) => [res.data.pass || res.data, ...prev]);
       setShowPassModal(false);
-    } catch (err) {
-      console.error("Submission Error:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Failed to create pass");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#e9fdf6", p: 3 }}>
-      <Stack spacing={4} maxWidth="1600px" mx="auto">
+    <Box
+      component="main"
+      sx={{
+        ml: { sm: collapsed ? "72px" : "260px" },
+        transition: "margin 0.3s",
+      }}
+    >
+      <Sidebar
+        user={user}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+      />
 
-        {/* ================= HEADER ================= */}
+      <Stack spacing={4} maxWidth="1400px" px={{ xs: 2, md: 4 }} mx="auto">
+        {/* HEADER */}
         <Card
           sx={{
-            p: 4,
+            p: { xs: 3, md: 4 },
             borderRadius: 5,
-            background:
-              "linear-gradient(90deg, #7dd3fc 0%, #86efac 100%)",
+            background: GRADIENT,
             color: "#fff",
           }}
         >
-          <Grid container alignItems="center">
+          <Grid container alignItems="center" spacing={2}>
             <Grid item xs={12} md={8}>
               <Stack direction="row" spacing={2} alignItems="center">
+                <IconButton
+                  onClick={() => setMobileOpen(true)}
+                  sx={{ display: { sm: "none" }, color: "#fff" }}
+                >
+                  <MenuIcon />
+                </IconButton>
+
                 <Shield size={34} />
                 <Typography variant="h5" fontWeight={900}>
-                  STAFF GATE PASS
+                  {role.toUpperCase()} GATE PASS
                 </Typography>
               </Stack>
-              <Typography mt={1}>
-                Apply and track your gate pass requests
+              <Typography mt={1} sx={{ opacity: 0.9 }}>
+                Apply and track gate pass requests
               </Typography>
             </Grid>
 
-            <Grid item xs={12} md={4} textAlign="right">
-              <Button
-                startIcon={<Plus />}
-                onClick={() => setShowPassModal(true)}
-                sx={{
-                  bgcolor: "#fff",
-                  color: "#166534",
-                  px: 4,
-                  py: 1.6,
-                  fontWeight: 900,
-                  borderRadius: 3,
-                }}
-              >
-                APPLY PASS
-              </Button>
-            </Grid>
+            {role === "staff" && (
+              <Grid item xs={12} md={4}>
+                <Stack
+                  direction="row"
+                  justifyContent={{ xs: "flex-start", md: "flex-end" }}
+                >
+                  <Button
+                    startIcon={<Plus />}
+                    onClick={() => setShowPassModal(true)}
+                    sx={{
+                      bgcolor: "#fff",
+                      color: "#2563eb",
+                      px: 4,
+                      py: 1.4,
+                      fontWeight: 800,
+                      borderRadius: 3,
+                      marginLeft:70
+                    }}
+                  >
+                    APPLY PASS
+                  </Button>
+                  <ProfileMenu  />
+                </Stack>
+              </Grid>
+            )}
           </Grid>
         </Card>
 
-        {/* ================= STATS ================= */}
+        {/* STATS */}
         <Grid container spacing={3}>
-          <StatCard title="My Passes" value={passes.length} icon={<FileText />} />
-          <StatCard
-            title="Approved"
-            value={passes.filter(p => p.status === "APPROVED").length}
-            icon={<Users />}
-          />
-          <StatCard
-            title="Pending"
-            value={passes.filter(p => p.status === "PENDING").length}
-            icon={<AlertCircle />}
-          />
-          <StatCard
-            title="Completed"
-            value={passes.filter(p => p.status === "COMPLETED").length}
-            icon={<CheckCircle2 />}
-          />
+          <StatCard title="Total Passes" value={passes.length} icon={<FileText />} />
+          <StatCard title="Approved" value={passes.filter(p => p.status === "APPROVED").length} icon={<Users />} />
+          <StatCard title="Pending" value={passes.filter(p => p.status === "PENDING").length} icon={<AlertCircle />} />
+          <StatCard title="Completed" value={passes.filter(p => p.status === "COMPLETED").length} icon={<CheckCircle2 />} />
         </Grid>
 
-        {/* ================= RECENT ACTIVITY ================= */}
+        {/* RECENT PASSES */}
         <Card sx={{ borderRadius: 4 }}>
           <CardContent>
             <Stack direction="row" spacing={1} mb={3} alignItems="center">
@@ -194,22 +199,24 @@ const Dashboard = () => {
               </Typography>
             </Stack>
 
-            {passes.length === 0 ? (
-              <Typography align="center" py={6}>
-                No gate pass requests yet
-              </Typography>
-            ) : (
-              <Grid container spacing={3}>
-                {passes.map((pass) => (
-                  <PassCard key={pass._id} pass={pass} />
-                ))}
-              </Grid>
-            )}
+            <Grid container spacing={3}>
+              {recentPasses.length === 0 ? (
+                <Typography align="center" width="100%" py={6}>
+                  No gate pass requests yet
+                </Typography>
+              ) : (
+                recentPasses.map((pass) => (
+                  <Grid key={pass._id} item xs={12} sm={6} lg={3}>
+                    <PassCard pass={pass} role={role} />
+                  </Grid>
+                ))
+              )}
+            </Grid>
           </CardContent>
         </Card>
       </Stack>
 
-      {/* ================= APPLY PASS MODAL ================= */}
+      {/* APPLY PASS MODAL */}
       <Dialog open={showPassModal} onClose={() => setShowPassModal(false)} fullWidth maxWidth="sm">
         <DialogTitle fontWeight={900}>Apply Gate Pass</DialogTitle>
         <DialogContent dividers>
@@ -218,26 +225,15 @@ const Dashboard = () => {
             <TextField name="externalPersonEmail" label="External Person Email" onChange={handleChange} />
             <TextField name="assetName" label="Asset Name" onChange={handleChange} />
             <TextField name="assetSerialNo" label="Asset Serial Number" onChange={handleChange} />
-
             <TextField select name="passType" label="Pass Type" onChange={handleChange}>
               <MenuItem value="RETURNABLE">Returnable</MenuItem>
               <MenuItem value="NON_RETURNABLE">Non-Returnable</MenuItem>
             </TextField>
-
-            {formData.passType === "RETURNABLE" && (
-              <TextField
-                name="returnDateTime"
-                type="datetime-local"
-                label="Return Date & Time"
-                InputLabelProps={{ shrink: true }}
-                onChange={handleChange}
-              />
-            )}
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowPassModal(false)}>Cancel</Button>
-          <Button variant="contained" color="success" onClick={handleSubmitPass}>
+          <Button variant="contained" onClick={handleSubmitPass} disabled={loading}>
             Submit
           </Button>
         </DialogActions>
@@ -251,62 +247,22 @@ const Dashboard = () => {
 =========================== */
 const StatCard = ({ title, value, icon }) => (
   <Grid item xs={12} sm={6} md={3}>
-    <Card sx={{ borderRadius: 4 }}>
-      <CardContent sx={{ display: "flex", justifyContent: "space-between" }}>
+    <Card sx={{ borderRadius: 4, p: 3 }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Box>
-          <Typography variant="caption">{title}</Typography>
-          <Typography variant="h5" fontWeight={900}>{value}</Typography>
+          <Typography variant="subtitle2" color="text.secondary">
+            {title}
+          </Typography>
+          <Typography variant="h4" fontWeight={900}>
+            {value}
+          </Typography>
         </Box>
-        <Box sx={{ p: 1.5, bgcolor: "#e0f2f1", borderRadius: 2 }}>
+        <Box sx={{ p: 2, borderRadius: "50%", bgcolor: "#e0f2fe", color: "#2563eb" }}>
           {icon}
         </Box>
-      </CardContent>
+      </Stack>
     </Card>
   </Grid>
-);
-
-/* ===========================
-   PASS CARD
-=========================== */
-const PassCard = ({ pass }) => (
-  <Grid item xs={12} md={6} lg={4}>
-    <Card
-      sx={{
-        borderRadius: 4,
-        background: "linear-gradient(135deg, #e8f5e9, #e0f7fa)",
-      }}
-    >
-      <CardContent>
-        <Stack direction="row" justifyContent="space-between">
-          <Typography fontWeight={900}>Gate Pass</Typography>
-          <Chip label={pass.status} size="small" />
-        </Stack>
-
-        <Divider sx={{ my: 2 }} />
-
-        <InfoRow icon={<User size={16} />} label="Requester" value={pass.requesterName} />
-        <InfoRow icon={<Mail size={16} />} label="Email" value={pass.requesterEmail} />
-        <InfoRow icon={<Package size={16} />} label="Asset" value={pass.assetName} />
-
-        {pass.passType === "RETURNABLE" && (
-          <InfoRow
-            icon={<Calendar size={16} />}
-            label="Return Date"
-            value={pass.returnDateTime}
-            highlight
-          />
-        )}
-      </CardContent>
-    </Card>
-  </Grid>
-);
-
-const InfoRow = ({ icon, label, value, highlight }) => (
-  <Box sx={{ display: "flex", gap: 1, p: highlight ? 1 : 0 }}>
-    {icon}
-    <Typography fontWeight={700}>{label}:</Typography>
-    <Typography>{value || "-"}</Typography>
-  </Box>
 );
 
 export default Dashboard;

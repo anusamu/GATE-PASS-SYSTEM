@@ -15,7 +15,10 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  IconButton,
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+
 import {
   ShieldCheck,
   CheckCircle,
@@ -26,26 +29,33 @@ import {
   Calendar,
 } from "lucide-react";
 
+import ProfileMenu from "../components/ProfileMenu";
+import Sidebar from "../components/SideBar";
+
 const API = "http://localhost:5000/api/auth";
+const GRADIENT = "linear-gradient(135deg,#2563eb,#22c55e)";
 
 const HodDashboard = () => {
-  const [pendingPasses, setPendingPasses] = useState([]);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
-  // ✅ REJECTION STATES (MUST BE INSIDE COMPONENT)
+  const [pendingPasses, setPendingPasses] = useState([]);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedPassId, setSelectedPassId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  /* ===========================
-     FETCH PENDING PASSES
-  =========================== */
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+  const user = { role };
+
   useEffect(() => {
+    if (!token || role !== "hod") return;
     fetchPendingPasses();
-  }, []);
+  }, [token, role]);
 
   const fetchPendingPasses = async () => {
     try {
-      const token = localStorage.getItem("token");
       const res = await axios.get(`${API}/hod/pending`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -55,78 +65,100 @@ const HodDashboard = () => {
     }
   };
 
-  /* ===========================
-     APPROVE PASS
-  =========================== */
   const approvePass = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        `${API}/approve/${id}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setPendingPasses((prev) => prev.filter((p) => p._id !== id));
-    } catch (err) {
-      console.error(err);
-    }
+    await axios.put(
+      `${API}/hod/approve/${id}`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setPendingPasses((prev) => prev.filter((p) => p._id !== id));
   };
 
-  /* ===========================
-     REJECT PASS (FINAL)
-  =========================== */
   const rejectPass = async () => {
-    try {
-      const token = localStorage.getItem("token");
+    await axios.put(
+      `${API}/hod/reject/${selectedPassId}`,
+      { reason: rejectionReason },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      await axios.put(
-        `${API}/reject/${selectedPassId}`,
-        { reason: rejectionReason },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    setPendingPasses((prev) =>
+      prev.filter((p) => p._id !== selectedPassId)
+    );
 
-      setPendingPasses((prev) =>
-        prev.filter((p) => p._id !== selectedPassId)
-      );
-
-      // reset dialog
-      setRejectDialogOpen(false);
-      setSelectedPassId(null);
-      setRejectionReason("");
-    } catch (err) {
-      console.error(err);
-    }
+    setRejectDialogOpen(false);
+    setSelectedPassId(null);
+    setRejectionReason("");
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#ecfdf5", p: 4 }}>
-      <Stack spacing={4} maxWidth="1600px" mx="auto">
+    <Box
+      component="main"
+      sx={{
+        ml: { sm: collapsed ? "72px" : "260px" },
+        transition: "margin 0.3s ease",
+        minHeight: "100vh",
+        bgcolor: "#f0fdfa",
+        p: { xs: 2, md: 3 },
+      }}
+    >
+      {/* SIDEBAR */}
+      <Sidebar
+        user={user}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+      />
 
-        {/* ================= HEADER ================= */}
+      <Stack spacing={4} maxWidth="1500px" mx="auto">
+
+        {/* HEADER */}
         <Card
           sx={{
-            p: 4,
+            p: { xs: 3, md: 4 },
             borderRadius: 5,
-            background:
-              "linear-gradient(90deg, #34d399 0%, #60a5fa 100%)",
+            background: GRADIENT,
             color: "#fff",
           }}
         >
-          <Stack direction="row" spacing={2} alignItems="center">
-            <ShieldCheck size={34} />
-            <Typography variant="h5" fontWeight={900}>
-              HOD APPROVAL PANEL
-            </Typography>
-          </Stack>
-          <Typography mt={1}>
-            Review and approve staff gate pass requests
-          </Typography>
+          <Grid container alignItems="center" spacing={2}>
+            <Grid item xs={12} md={8}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <IconButton
+                  onClick={() => setMobileOpen(true)}
+                  sx={{ display: { sm: "none" }, color: "#fff" }}
+                >
+                  <MenuIcon />
+                </IconButton>
+
+                <ShieldCheck size={34} />
+                <Typography variant="h5" fontWeight={900}>
+                  HOD APPROVAL PANEL
+                </Typography>
+              </Stack>
+
+              <Typography mt={1} sx={{ opacity: 0.9 }}>
+                Review and approve staff gate pass requests
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <Stack
+                direction="row"
+                justifyContent={{ xs: "flex-start", md: "flex-end" }}
+                alignItems="center"
+              >
+                <ProfileMenu />
+              </Stack>
+            </Grid>
+          </Grid>
         </Card>
 
-        {/* ================= PASS LIST ================= */}
+        {/* PASS LIST */}
         {pendingPasses.length === 0 ? (
-          <Typography align="center" py={6}>
+          <Typography align="center" py={6} fontWeight={700}>
             No pending approvals 🎉
           </Typography>
         ) : (
@@ -136,14 +168,15 @@ const HodDashboard = () => {
                 <Card
                   sx={{
                     borderRadius: 4,
-                    background:
-                      "linear-gradient(135deg, #e0f2fe, #dcfce7)",
-                    boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
+                    bgcolor: "#ffffff",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
                   }}
                 >
                   <CardContent>
                     <Stack direction="row" justifyContent="space-between">
-                      <Typography fontWeight={900}>Gate Pass</Typography>
+                      <Typography fontWeight={900}>
+                        Gate Pass
+                      </Typography>
                       <Chip label="PENDING" color="warning" size="small" />
                     </Stack>
 
@@ -177,8 +210,8 @@ const HodDashboard = () => {
                       <Button
                         fullWidth
                         startIcon={<CheckCircle />}
-                        color="success"
                         variant="contained"
+                        sx={{ bgcolor: "#22c55e" }}
                         onClick={() => approvePass(pass._id)}
                       >
                         Approve
@@ -187,8 +220,8 @@ const HodDashboard = () => {
                       <Button
                         fullWidth
                         startIcon={<XCircle />}
-                        color="error"
                         variant="outlined"
+                        color="error"
                         onClick={() => {
                           setSelectedPassId(pass._id);
                           setRejectDialogOpen(true);
@@ -205,14 +238,16 @@ const HodDashboard = () => {
         )}
       </Stack>
 
-      {/* ================= REJECT DIALOG (GLOBAL) ================= */}
+      {/* REJECT DIALOG */}
       <Dialog
         open={rejectDialogOpen}
         onClose={() => setRejectDialogOpen(false)}
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle fontWeight={900}>Reject Gate Pass</DialogTitle>
+        <DialogTitle fontWeight={900}>
+          Reject Gate Pass
+        </DialogTitle>
 
         <DialogContent dividers>
           <TextField
@@ -226,7 +261,9 @@ const HodDashboard = () => {
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setRejectDialogOpen(false)}>
+            Cancel
+          </Button>
           <Button
             variant="contained"
             color="error"

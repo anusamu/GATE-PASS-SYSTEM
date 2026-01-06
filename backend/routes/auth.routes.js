@@ -15,10 +15,10 @@ const {
   pendingApprovals,
   approvePass,
   rejectPass,
+  getRecentPasses, // 1. Added this here
 } = require("../controllers/passController");
 
 // Import Middleware
-// Assuming 'protect' handles JWT verification and 'authorize' handles Roles
 const { protect } = require("../middleware/authMiddleware"); 
 const { authorize } = require("../middleware/roleMiddleware");
 
@@ -37,14 +37,16 @@ router.post(
 
 // --- Pass Management Routes ---
 
-// Staff: Create and view own passes
+// Staff: Create, view all, and view recent passes
 router.post("/staff/create", protect, authorize("staff"), createPass);
 router.get("/staff/mypass", protect, authorize("staff"), myPasses);
+router.get("/staff/recent", protect, authorize("staff"), getRecentPasses); // 2. Fixed naming and added role check
 
-// HOD: View pending and approve, reject
+// HOD: View pending
 router.get("/hod/pending", protect, authorize("hod"), pendingApprovals);
-router.put("/approve/:id", protect, authorize("hod"), approvePass);
-router.put("/reject/:id", protect, authorize("hod"), rejectPass);
 
+// HOD: Approve and Reject
+router.put("/hod/approve/:id", protect, authorize("hod"), approvePass);
+router.put("/hod/reject/:id", protect, authorize("hod"), rejectPass);
 
 module.exports = router;

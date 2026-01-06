@@ -4,8 +4,10 @@ import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 
 import AuthPage from './pages/Login';
 import DashBoard from './pages/DashBoard';
-import PassCard from './components/PassCard';
 import HodDashboard from './pages/HodDashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import StaffMypass from './pages/StaffMypass';
+import StaffHistory from './pages/StaffHistory';
 
 
 function App() {
@@ -14,12 +16,16 @@ function App() {
     
 
       <Routes>
-        
+      
      
-       
-         <Route path="/" element={<AuthPage />} />
+
+
+       <Route path="/" element={<AuthPage />} />
         <Route path="/dashboard" element={<DashBoard/>} /> 
-        <Route path="/hod/dashboard" element={<HodDashboard/>} />
+        <Route path="/hod/dashboard" element={<HodDashboard/>} /> 
+        <Route path="/admin/dashboard" element={<AdminDashboard/>} /> 
+        <Route path="/dashboard/Mypass" element={<StaffMypass/>} /> 
+        <Route path="/dashboard/History" element={<StaffHistory/>} /> 
 
       
       </Routes>

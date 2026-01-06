@@ -9,6 +9,15 @@ const passSchema = new mongoose.Schema(
     department: String,
     hod: { type: mongoose.Schema.Types.ObjectId, ref: "UserAuth" },
 
+// approvedBy: {
+//   type: mongoose.Schema.Types.ObjectId,
+//   ref: "User",
+// },
+// rejectedBy: {
+//   type: mongoose.Schema.Types.ObjectId,
+//   ref: "User",
+// },
+
     passType: {
       type: String,
       enum: ["RETURNABLE", "NON_RETURNABLE"],

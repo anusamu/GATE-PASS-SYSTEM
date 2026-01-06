@@ -63,7 +63,7 @@ const [signup, setSignup] = useState({
     // 🔁 ROLE BASED NAVIGATION
     switch (role) {
       case "admin":
-        navigate("/dashboard");
+        navigate("/admin/dashboard");
         break;
 
       case "hod":
