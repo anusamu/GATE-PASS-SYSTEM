@@ -54,27 +54,35 @@ const Sidebar = ({
       { id: "history", label: "History", icon: <History /> },
     ],
     hod: [
-      { id: "dashboard", label: "Dashboard", icon: <Dashboard /> },
+      { id: "dashboard", label: "HOD Dashboard", icon: <Dashboard /> },
       { id: "approved", label: "Approved", icon: <CheckCircle /> },
       { id: "rejected", label: "Rejected", icon: <Cancel /> },
       { id: "history", label: "History", icon: <History /> },
     ],
     admin: [
-      { id: "dashboard", label: "Dashboard", icon: <Dashboard /> },
+      { id: "dashboard", label: "Admin Dashboard", icon: <Dashboard /> },
       { id: "users", label: "Users", icon: <People /> },
       { id: "approved", label: "Approved", icon: <CheckCircle /> },
       { id: "history", label: "History", icon: <History /> },
     ],
     security: [
-      { id: "dashboard", label: "Dashboard", icon: <Dashboard /> },
+      { id: "dashboard", label: "Security Dashboard", icon: <Dashboard /> },
       { id: "verified", label: "Verified", icon: <QrCodeScanner /> },
       { id: "rejected", label: "Rejected", icon: <Cancel /> },
     ],
   };
 
+  /* ===== DASHBOARD ROUTE BY ROLE ===== */
+  const dashboardRouteByRole = {
+    staff: "/dashboard",
+    security: "/dashboard",
+    hod: "/hod/dashboard",
+    admin: "/admin/dashboard",
+  };
+
   /* ===== ROUTES ===== */
   const routeMap = {
-    dashboard: "/dashboard",
+    dashboard: dashboardRouteByRole[role],
     "my-passes": "/dashboard/mypass",
     history: "/dashboard/history",
   };
@@ -141,7 +149,11 @@ const Sidebar = ({
                 selected={selected}
                 onClick={() => {
                   setActiveTab(item.id);
-                  if (routeMap[item.id]) navigate(routeMap[item.id]);
+
+                  if (routeMap[item.id]) {
+                    navigate(routeMap[item.id]);
+                  }
+
                   if (isMobile) setMobileOpen(false);
                 }}
                 sx={{
@@ -194,7 +206,6 @@ const Sidebar = ({
 
   return (
     <>
-      {/* BACKDROP */}
       {mobileOpen && isMobile && (
         <Backdrop open onClick={() => setMobileOpen(false)} />
       )}

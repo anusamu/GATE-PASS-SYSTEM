@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { 
+   InputAdornment 
+} from '@mui/material';
+import { 
+  CloudUpload as UploadIcon, 
+  Close as CloseIcon, 
+  InfoOutlined as InfoIcon 
+} from '@mui/icons-material';
 import MenuIcon from "@mui/icons-material/Menu";
 import {
   Box,
@@ -16,6 +24,7 @@ import {
   DialogActions,
   TextField,
   MenuItem,
+
 } from "@mui/material";
 
 import {
@@ -50,7 +59,29 @@ const Dashboard = () => {
     assetSerialNo: "",
     passType: "",
     returnDateTime: "",
+      assetImage:"",
+externalPersonPhone:"",
+
   });
+
+  //  Cloudnary code 
+  const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const data = new FormData();
+  data.append("file", file);
+  data.append("upload_preset", "your_preset");
+
+  const res = await fetch(
+    "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload",
+    { method: "POST", body: data }
+  );
+
+  const json = await res.json();
+  setFormData(prev => ({ ...prev, assetImage: json.secure_url }));
+};
+
 
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role") || "staff";
@@ -70,14 +101,16 @@ const Dashboard = () => {
       const res = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      setPasses(res.data.reverse());
+const sorted = res.data.sort(
+  (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+);
+setPasses(sorted);
     } catch (err) {
       console.error(err.message);
     }
   };
 
-  const recentPasses = passes.slice(0, 4);
+  const recentPasses = passes.slice(0, 3);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -217,27 +250,124 @@ const Dashboard = () => {
       </Stack>
 
       {/* APPLY PASS MODAL */}
-      <Dialog open={showPassModal} onClose={() => setShowPassModal(false)} fullWidth maxWidth="sm">
-        <DialogTitle fontWeight={900}>Apply Gate Pass</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2}>
-            <TextField name="externalPersonName" label="External Person Name" onChange={handleChange} />
-            <TextField name="externalPersonEmail" label="External Person Email" onChange={handleChange} />
-            <TextField name="assetName" label="Asset Name" onChange={handleChange} />
-            <TextField name="assetSerialNo" label="Asset Serial Number" onChange={handleChange} />
-            <TextField select name="passType" label="Pass Type" onChange={handleChange}>
-              <MenuItem value="RETURNABLE">Returnable</MenuItem>
-              <MenuItem value="NON_RETURNABLE">Non-Returnable</MenuItem>
-            </TextField>
+      <Dialog 
+  open={showPassModal} 
+  onClose={() => setShowPassModal(false)} 
+  fullWidth 
+  maxWidth="sm"
+  PaperProps={{
+    sx: { borderRadius: 3, p: 1 } // Softer corners and inner padding
+  }}
+>
+  <DialogTitle sx={{ m: 0, p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Typography variant="h5" fontWeight={800} sx={{ letterSpacing: '-0.5px' }}>
+      Apply Gate Pass
+    </Typography>
+    <IconButton onClick={() => setShowPassModal(false)} size="small">
+      <CloseIcon />
+    </IconButton>
+  </DialogTitle>
+
+  <DialogContent sx={{ borderTop: '1px solid #eee', borderBottom: '1px solid #eee', py: 3 }}>
+    <Stack spacing={3}>
+      
+      {/* Asset Information Section */}
+      <Box>
+        <Typography variant="overline" color="text.secondary" fontWeight={700} sx={{ mb: 1, display: 'block' }}>
+          Asset Details
+        </Typography>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <TextField fullWidth name="assetName" label="Asset Name" variant="outlined" onChange={handleChange} required />
+          <TextField fullWidth name="assetSerialNo" label="Serial Number" variant="outlined" onChange={handleChange} required />
+        </Stack>
+      </Box>
+
+      {/* External Person Section */}
+      <Box>
+        <Typography variant="overline" color="text.secondary" fontWeight={700} sx={{ mb: 1, display: 'block' }}>
+          Recipient Information
+        </Typography>
+        <Stack spacing={2}>
+          <TextField fullWidth name="externalPersonName" label="External Person Name" onChange={handleChange} required />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <TextField fullWidth name="externalPersonEmail" label="Email Address" onChange={handleChange} required />
+            <TextField fullWidth name="externalPersonPhone" label="Phone Number" onChange={handleChange} />
           </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowPassModal(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmitPass} disabled={loading}>
-            Submit
+        </Stack>
+      </Box>
+
+      {/* Configuration Section */}
+      <Box>
+        <Typography variant="overline" color="text.secondary" fontWeight={700} sx={{ mb: 1, display: 'block' }}>
+          Pass Configuration
+        </Typography>
+        <Stack spacing={2}>
+          <TextField select fullWidth name="passType" label="Pass Type" onChange={handleChange} required defaultValue="">
+            <MenuItem value="RETURNABLE">Returnable</MenuItem>
+            <MenuItem value="NON_RETURNABLE">Non-Returnable</MenuItem>
+          </TextField>
+
+          {formData.passType === "RETURNABLE" && (
+            <TextField
+              fullWidth
+              type="datetime-local"
+              name="returnDateTime"
+              label="Expected Return Date & Time"
+              InputLabelProps={{ shrink: true }}
+              onChange={handleChange}
+              required
+            />
+          )}
+
+          {/* Upload Area Refactored */}
+          <Button
+            variant="dashed" // If you use a custom theme, otherwise "outlined"
+            component="label"
+            sx={{ 
+              py: 2, 
+              borderStyle: 'dashed', 
+              borderWidth: 2, 
+              backgroundColor: 'action.hover',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1
+            }}
+          >
+            <UploadIcon color="action" />
+            <Typography variant="body2" color="text.secondary">
+              {formData.imageName || "Click to upload asset image (Optional)"}
+            </Typography>
+            <input hidden type="file" accept="image/*" onChange={handleImageUpload} />
           </Button>
-        </DialogActions>
-      </Dialog>
+        </Stack>
+      </Box>
+    </Stack>
+  </DialogContent>
+
+  <DialogActions sx={{ p: 2.5 }}>
+    <Button 
+      onClick={() => setShowPassModal(false)} 
+      sx={{ color: 'text.secondary', fontWeight: 600 }}
+    >
+      Cancel
+    </Button>
+    <Button 
+      variant="contained" 
+      onClick={handleSubmitPass} 
+      disabled={loading}
+      disableElevation
+      sx={{ 
+        px: 4, 
+        py: 1, 
+        borderRadius: 2,
+        textTransform: 'none',
+        fontWeight: 700
+      }}
+    >
+      {loading ? "Processing..." : "Create Pass"}
+    </Button>
+  </DialogActions>
+</Dialog>
     </Box>
   );
 };

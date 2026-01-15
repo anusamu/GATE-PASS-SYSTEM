@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { Tooltip } from "@mui/material";
 import {
   Box,
   Grid,
@@ -33,37 +35,26 @@ import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
 import Sidebar from "../components/SideBar";
 import ProfileMenu from "../components/ProfileMenu";
 
-const API = "http://localhost:5000/api";
+/* ✅ CORRECT BASE */
+const API = "http://localhost:5000/api/admin";
 
 const AdminDashboard = () => {
-  /* =======================
-     ROLE (FIXED)
-  ======================= */
   const role = "admin";
   const user = { role };
 
-  /* =======================
-     SIDEBAR STATE
-  ======================= */
   const [activeTab, setActiveTab] = useState("dashboard");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  /* =======================
-     DATA STATE
-  ======================= */
   const [users, setUsers] = useState([]);
   const [approvedCount, setApprovedCount] = useState(0);
   const [openAddUser, setOpenAddUser] = useState(false);
 
-  /* =======================
-     FORM STATE (UPDATED)
-  ======================= */
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     role: "",
-    department: "",   // ✅ added
+    department: "",
     password: "",
   });
 
@@ -79,7 +70,7 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(`${API}/admin/users`, {
+      const res = await axios.get(`${API}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data);
@@ -90,10 +81,9 @@ const AdminDashboard = () => {
 
   const fetchApprovedCount = async () => {
     try {
-      const res = await axios.get(
-        `${API}/admin/passes/approved/count`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await axios.get(`${API}/passes/approved/count`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setApprovedCount(res.data.count);
     } catch (err) {
       console.error("Approved count fetch failed", err);
@@ -108,11 +98,9 @@ const AdminDashboard = () => {
 
   const handleAddUser = async () => {
     try {
-      await axios.post(
-        `${API}/admin/create-user`,
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.post(`${API}/create-user`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       setOpenAddUser(false);
       setFormData({
@@ -128,10 +116,21 @@ const AdminDashboard = () => {
       alert("Failed to create user");
     }
   };
+const handleDeleteUser = async (id) => {
+  const confirm = window.confirm("Are you sure you want to delete this user?");
+  if (!confirm) return;
 
-  /* =======================
-     RENDER
-  ======================= */
+  try {
+    await axios.delete(`${API}/user/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    fetchUsers(); // refresh list
+  } catch (err) {
+    alert("Failed to delete user");
+  }
+};
+
   return (
     <Box
       component="main"
@@ -143,7 +142,6 @@ const AdminDashboard = () => {
         p: 3,
       }}
     >
-      {/* SIDEBAR */}
       <Sidebar
         user={user}
         activeTab={activeTab}
@@ -168,7 +166,6 @@ const AdminDashboard = () => {
           <Grid container alignItems="center" spacing={2}>
             <Grid item xs={12} md={8}>
               <Stack direction="row" spacing={2} alignItems="center">
-                {/* MOBILE MENU */}
                 <IconButton
                   onClick={() => setMobileOpen(true)}
                   sx={{ display: { sm: "none" }, color: "#fff" }}
@@ -181,7 +178,6 @@ const AdminDashboard = () => {
                   ADMIN DASHBOARD
                 </Typography>
               </Stack>
-
               <Typography mt={1}>
                 Manage users and system approvals
               </Typography>
@@ -193,7 +189,6 @@ const AdminDashboard = () => {
                 justifyContent={{ xs: "flex-start", md: "flex-end" }}
                 alignItems="center"
                 spacing={2}
-                sx={{ mt: { xs: 2, md: 0 } }}
               >
                 <Button
                   startIcon={<PersonAddAltIcon />}
@@ -202,13 +197,12 @@ const AdminDashboard = () => {
                     bgcolor: "#fff",
                     color: "#166534",
                     fontWeight: 900,
-                    px: 3,
+                    px: 4,
                     borderRadius: 3,
                   }}
                 >
                   ADD USER
                 </Button>
-
                 <ProfileMenu />
               </Stack>
             </Grid>
@@ -222,7 +216,6 @@ const AdminDashboard = () => {
             value={approvedCount}
             icon={<CheckCircleIcon fontSize="large" />}
           />
-
           <StatCard
             title="Total Users"
             value={users.length}
@@ -245,21 +238,32 @@ const AdminDashboard = () => {
                     <TableCell><b>Email</b></TableCell>
                     <TableCell><b>Role</b></TableCell>
                     <TableCell><b>Department</b></TableCell>
+                    <TableCell><b>Action</b></TableCell>
+
                   </TableRow>
                 </TableHead>
 
                 <TableBody>
                   {users.map((u) => (
-                    <TableRow key={u._id}>
-                      <TableCell>{u.name}</TableCell>
-                      <TableCell>{u.email}</TableCell>
-                      <TableCell sx={{ textTransform: "uppercase" }}>
-                        {u.role}
-                      </TableCell>
-                      <TableCell>
-                        {u.department || "-"}
-                      </TableCell>
-                    </TableRow>
+                   <TableRow key={u._id}>
+  <TableCell>{u.name}</TableCell>
+  <TableCell>{u.email}</TableCell>
+  <TableCell sx={{ textTransform: "uppercase" }}>
+    {u.role}
+  </TableCell>
+  <TableCell>{u.department || "-"}</TableCell>
+  <TableCell>
+    <Tooltip title="Delete User">
+      <IconButton
+        color="error"
+        onClick={() => handleDeleteUser(u._id)}
+        disabled={u.role === "admin"}
+      >
+        <DeleteIcon />
+      </IconButton>
+    </Tooltip>
+  </TableCell>
+</TableRow>
                   ))}
                 </TableBody>
               </Table>
@@ -279,41 +283,17 @@ const AdminDashboard = () => {
 
         <DialogContent dividers>
           <Stack spacing={2}>
-            <TextField
-              label="Name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-            />
+            <TextField label="Name" name="name" value={formData.name} onChange={handleChange} />
+            <TextField label="Email" name="email" value={formData.email} onChange={handleChange} />
 
-            <TextField
-              label="Email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-
-            <TextField
-              select
-              label="Role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-            >
+            <TextField select label="Role" name="role" value={formData.role} onChange={handleChange}>
               <MenuItem value="hod">HOD</MenuItem>
               <MenuItem value="admin">Admin</MenuItem>
               <MenuItem value="security">Security</MenuItem>
             </TextField>
 
-            {/* DEPARTMENT (ONLY FOR HOD) */}
             {formData.role === "hod" && (
-              <TextField
-                select
-                label="Department"
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-              >
+              <TextField select label="Department" name="department" value={formData.department} onChange={handleChange}>
                 <MenuItem value="IT">IT</MenuItem>
                 <MenuItem value="HR">HR</MenuItem>
                 <MenuItem value="Finance">Finance</MenuItem>
@@ -322,13 +302,7 @@ const AdminDashboard = () => {
               </TextField>
             )}
 
-            <TextField
-              label="Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-            />
+            <TextField label="Password" name="password" type="password" value={formData.password} onChange={handleChange} />
           </Stack>
         </DialogContent>
 
@@ -359,13 +333,7 @@ const AdminDashboard = () => {
 ======================= */
 const StatCard = ({ title, value, icon }) => (
   <Grid item xs={12} sm={6} md={3}>
-    <Card
-      sx={{
-        height: 170,
-        borderRadius: 4,
-        boxShadow: "0 12px 30px rgba(0,0,0,0.08)",
-      }}
-    >
+    <Card sx={{ height: 170, borderRadius: 4, boxShadow: "0 12px 30px rgba(0,0,0,0.08)" }}>
       <CardContent
         sx={{
           height: "100%",
@@ -383,14 +351,7 @@ const StatCard = ({ title, value, icon }) => (
           </Typography>
         </Box>
 
-        <Box
-          sx={{
-            p: 2.5,
-            borderRadius: "50%",
-            bgcolor: "#dcfce7",
-            color: "#166534",
-          }}
-        >
+        <Box sx={{ p: 2.5, borderRadius: "50%", bgcolor: "#dcfce7", color: "#166534" }}>
           {icon}
         </Box>
       </CardContent>

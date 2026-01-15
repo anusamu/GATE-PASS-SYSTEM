@@ -28,7 +28,7 @@ exports.login = async (req, res) => {
     // 2️⃣ Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid" });
+      return res.status(401).json({ message: "Invalid password" });
     }
 
     // 3️⃣ Generate JWT
@@ -39,6 +39,7 @@ exports.login = async (req, res) => {
       token,
       role: user.role,          // admin | hod | security | staff
       name: user.name,
+       email: user.email,
       department: user.department || null,
     });
 
