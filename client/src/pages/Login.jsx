@@ -16,6 +16,7 @@ import SecurityIcon from "@mui/icons-material/Security";
 
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+// const API = import.meta.env.VITE_API || "http://10.206.73.6:5000/api/auth";
 
 const API = "http://localhost:5000/api/auth";
 const GRADIENT = "linear-gradient(135deg,#2563eb,#22c55e)";
@@ -65,6 +66,8 @@ function AuthPage() {
           navigate("/hod/dashboard");
           break;
         case "security":
+           navigate("/security/dashboard");
+          break;
         case "staff":
           navigate("/dashboard");
           break;
@@ -92,7 +95,9 @@ function AuthPage() {
   };
 
   return (
-    <Box
+  
+  
+<Box
       minHeight="100vh"
       display="flex"
       alignItems="center"
@@ -287,6 +292,8 @@ function AuthPage() {
         </Paper>
       </Box>
     </Box>
+  
+    
   );
 }
 

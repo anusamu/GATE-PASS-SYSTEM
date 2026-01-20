@@ -21,7 +21,15 @@ const {
 // Import Middleware
 const { protect } = require("../middleware/authMiddleware"); 
 const { authorize } = require("../middleware/roleMiddleware");
+const upload = require("../middleware/upload");
+const { getHistory } = require("../controllers/passController");
 
+const {
+  getUsers,
+  createUser,
+  approvedPassCount,
+  deleteUser,
+} = require("../controllers/adminController");
 // --- Auth Routes ---
 router.post("/login", login);
 router.post("/register", staffRegister);
@@ -38,7 +46,7 @@ router.post(
 // --- Pass Management Routes ---
 
 // Staff: Create, view all, and view recent passes
-router.post("/staff/create", protect, authorize("staff"), createPass);
+router.post("/staff/create", protect,upload.single("photo"), authorize("staff"), createPass);
 router.get("/staff/mypass", protect, authorize("staff"), myPasses);
 router.get("/staff/recent", protect, authorize("staff"), getRecentPasses); // 2. Fixed naming and added role check
 
@@ -48,5 +56,16 @@ router.get("/hod/pending", protect, authorize("hod"), pendingApprovals);
 // HOD: Approve and Reject
 router.put("/hod/approve/:id", protect, authorize("hod"), approvePass);
 router.put("/hod/reject/:id", protect, authorize("hod"), rejectPass);
+
+// history of view and user
+router.get("/passhistory", protect, getHistory);
+
+
+// Admin dashboard
+
+router.get("/users", protect, getUsers);
+router.post("/create-user", protect, createUser);
+router.get("/passes/approved/count", protect, approvedPassCount);
+router.delete("/user/:id", protect, deleteUser);
 
 module.exports = router;

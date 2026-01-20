@@ -36,7 +36,7 @@ import Sidebar from "../components/SideBar";
 import ProfileMenu from "../components/ProfileMenu";
 
 /* ✅ CORRECT BASE */
-const API = "http://localhost:5000/api/admin";
+const API = "http://localhost:5000/api/auth";
 
 const AdminDashboard = () => {
   const role = "admin";
@@ -187,7 +187,7 @@ const handleDeleteUser = async (id) => {
               <Stack
                 direction="row"
                 justifyContent={{ xs: "flex-start", md: "flex-end" }}
-                alignItems="center"
+               marginLeft={70}
                 spacing={2}
               >
                 <Button

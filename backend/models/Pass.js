@@ -17,7 +17,7 @@ const passSchema = new mongoose.Schema(
 
   assetName: { type: String, required: true },
   assetSerialNo: { type: String, required: true },
-  assetImage: String, // Cloudinary URL (optional)
+ purpose: { type: String },
 
   externalPersonName: { type: String, required: true },
   externalPersonEmail: { type: String, required: true },
@@ -25,7 +25,10 @@ const passSchema = new mongoose.Schema(
 
   outDate: { type: Date, default: Date.now },
   returnDateTime: Date,
-
+    photo: {
+      type: String, // Cloudinary URL
+      
+    },
   status: {
     type: String,
     enum: ["PENDING", "APPROVED", "REJECTED"],

@@ -1,33 +1,71 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
+import AuthPage from "./pages/Login";
+import DashBoard from "./pages/DashBoard";
+import HodDashboard from "./pages/HodDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import StaffMypass from "./pages/StaffMypass";
+import StaffHistory from "./pages/StaffHistory";
 
-
-import AuthPage from './pages/Login';
-import DashBoard from './pages/DashBoard';
-import HodDashboard from './pages/HodDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import StaffMypass from './pages/StaffMypass';
-import StaffHistory from './pages/StaffHistory';
-
+import PrivateRoute from "./routes/PrivateRoute";
+import RoleRoute from "./routes/RoleRoute";
 
 function App() {
   return (
     <BrowserRouter>
-    
-
       <Routes>
-      
-     
 
+        {/* PUBLIC ROUTE */}
+        <Route path="/" element={<AuthPage />} />
 
-       <Route path="/" element={<AuthPage />} />
-        <Route path="/dashboard" element={<DashBoard/>} /> 
-        <Route path="/hod/dashboard" element={<HodDashboard/>} /> 
-        <Route path="/admin/dashboard" element={<AdminDashboard/>} /> 
-        <Route path="/dashboard/Mypass" element={<StaffMypass/>} /> 
-        <Route path="/dashboard/History" element={<StaffHistory/>} /> 
+        {/* STAFF ROUTES */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <DashBoard />
+            </PrivateRoute>
+          }
+        />
 
-      
+        <Route
+          path="/dashboard/mypass"
+          element={
+            <PrivateRoute>
+              <StaffMypass />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/history"
+          element={
+            <PrivateRoute>
+              <StaffHistory />
+            </PrivateRoute>
+          }
+        />
+
+        {/* HOD ROUTE */}
+        <Route
+          path="/hod/dashboard"
+          element={
+            <RoleRoute role="hod">
+              <HodDashboard />
+            </RoleRoute>
+          }
+        />
+
+        {/* ADMIN ROUTE */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <RoleRoute role="admin">
+              <AdminDashboard />
+            </RoleRoute>
+          }
+        />
+
       </Routes>
     </BrowserRouter>
   );

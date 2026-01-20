@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Grid,
   Card,
@@ -12,11 +12,13 @@ import {
 } from "@mui/material";
 import { User, Mail, Package, Calendar, Check, X, Printer } from "lucide-react";
 import QRCode from "react-qr-code";
+import PassDetails from "./PassDetailsDialog";
 
 /* ===========================
-   PASS CARD COMPONENT
+   PASS CARD
 =========================== */
 const PassCard = ({ pass, onApprove, onReject, role }) => {
+  const [open, setOpen] = useState(false);
   const isApproved = pass.status === "APPROVED";
 
   const handlePrint = () => {
@@ -24,114 +26,132 @@ const PassCard = ({ pass, onApprove, onReject, role }) => {
   };
 
   return (
-    <Grid item xs={12} sm={12} md={6} lg={4}>
-      <Card
-        sx={{
-          borderRadius: 4,
-          background: "linear-gradient(135deg, #e8f5e9, #e0f7fa)",
-        }}
-        className="print-area"
-      >
-        <CardContent>
-          {/* HEADER */}
-          <Stack direction="row" justifyContent="space-between">
-            <Typography fontWeight={900}>Gate Pass</Typography>
-            <Chip
-              label={pass.status}
-              color={
-                pass.status === "APPROVED"
-                  ? "success"
-                  : pass.status === "REJECTED"
-                  ? "error"
-                  : "warning"
-              }
-              size="small"
-            />
-          </Stack>
+    <>
+      <Grid item xs={12} sm={12} md={6} lg={4}>
+        <Card
+          sx={{
+            borderRadius: 4,
+            background: "linear-gradient(135deg, #e8f5e9, #e0f7fa)",
+            cursor: "pointer",
+          }}
+          className="print-area"
+          onClick={() => setOpen(true)}
+        >
+          <CardContent>
+            {/* HEADER */}
+            <Stack direction="row" justifyContent="space-between">
+              <Typography fontWeight={900}>Gate Pass</Typography>
+              <Chip
+                label={pass.status}
+                color={
+                  pass.status === "APPROVED"
+                    ? "success"
+                    : pass.status === "REJECTED"
+                    ? "error"
+                    : "warning"
+                }
+                size="small"
+              />
+            </Stack>
 
-          <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 2 }} />
 
-          {/* DETAILS */}
-          <InfoRow icon={<User size={16} />} label="Requester" value={pass.requesterName} />
-          <InfoRow icon={<Mail size={16} />} label="Email" value={pass.requesterEmail} />
-          <InfoRow icon={<Package size={16} />} label="Asset" value={pass.assetName} />
+            {/* DETAILS */}
+            <InfoRow icon={<User size={16} />} label="Requester" value={pass.requesterName} />
+            <InfoRow icon={<Mail size={16} />} label="Email" value={pass.requesterEmail} />
+            <InfoRow icon={<Package size={16} />} label="Asset" value={pass.assetName} />
 
-          {pass.passType === "RETURNABLE" && (
-            <InfoRow
-              icon={<Calendar size={16} />}
-              label="Return Date"
-              value={pass.returnDateTime}
-              highlight
-            />
-          )}
+            {pass.passType === "RETURNABLE" && (
+              <InfoRow
+                icon={<Calendar size={16} />}
+                label="Return Date"
+                value={pass.returnDateTime}
+                highlight
+              />
+            )}
 
-          {/* QR CODE (ONLY IF APPROVED) */}
-          {isApproved && (
-            <>
-              <Divider sx={{ my: 2 }} />
-              <Box textAlign="center">
-                <Typography fontWeight={700} mb={1}>
-                  Security QR Code
-                </Typography>
-                <QRCode
-                  size={140}
-                  value={JSON.stringify({
-                    passId: pass._id,
-                    valid: true,
-                  })}
-                />
-              </Box>
-            </>
-          )}
-
-          {/* ACTIONS */}
-          <Divider sx={{ my: 2 }} />
-
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1}
-            justifyContent="space-between"
-          >
-            {/* HOD ACTIONS */}
-            {role === "hod" && pass.status === "PENDING" && (
+            {/* QR CODE (ONLY IF APPROVED) */}
+            {isApproved && (
               <>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  color="success"
-                  startIcon={<Check />}
-                  onClick={() => onApprove(pass._id)}
-                >
-                  Approve
-                </Button>
-
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  color="error"
-                  startIcon={<X />}
-                  onClick={() => onReject(pass._id)}
-                >
-                  Reject
-                </Button>
+                <Divider sx={{ my: 2 }} />
+                <Box textAlign="center">
+                  <Typography fontWeight={700} mb={1}>
+                    Security QR Code
+                  </Typography>
+                  <QRCode
+                    size={140}
+                    value={JSON.stringify({
+                      passId: pass._id,
+                      valid: true,
+                    })}
+                  />
+                </Box>
               </>
             )}
 
-            {/* PRINT */}
-            {isApproved && (
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<Printer />}
-                onClick={handlePrint}
-              >
-                Print Pass
-              </Button>
-            )}
-          </Stack>
-        </CardContent>
-      </Card>
-    </Grid>
+            {/* ACTIONS */}
+            <Divider sx={{ my: 2 }} />
+
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              justifyContent="space-between"
+            >
+              {role === "hod" && pass.status === "PENDING" && (
+                <>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="success"
+                    startIcon={<Check />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onApprove(pass._id);
+                    }}
+                  >
+                    Approve
+                  </Button>
+
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    color="error"
+                    startIcon={<X />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onReject(pass._id);
+                    }}
+                  >
+                    Reject
+                  </Button>
+                </>
+              )}
+{isApproved && (
+  <Button
+    fullWidth
+    variant="outlined"
+    startIcon={<Printer />}
+    onClick={(e) => {
+      e.stopPropagation();
+      setOpen(true); // opens dialog with print & download
+    }}
+  >
+    Print / Download Pass
+  </Button>
+)}
+
+            </Stack>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* POPUP COMPONENT */}
+      <PassDetails
+        open={open}
+        onClose={() => setOpen(false)}
+        pass={pass}
+      />
+    </>
   );
 };
 

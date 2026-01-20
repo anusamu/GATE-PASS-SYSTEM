@@ -148,7 +148,7 @@ const HodDashboard = () => {
               <Stack
                 direction="row"
                 justifyContent={{ xs: "flex-start", md: "flex-end" }}
-                alignItems="center"
+              marginLeft={85}
               >
                 <ProfileMenu />
               </Stack>

@@ -14,12 +14,20 @@ app.use(morgan('dev'));
 
 connectDB();
 
+
+// app.use(cors({
+//   origin:"http://localhost:5173",
+//   origin:process.env.API,
+  
+// }));
+
+app.use(express.json());
 app.use("/api/auth", require("./routes/auth.routes"));
-app.use("/api/admin", require("./routes/admin.routes"));
+// app.use("/api/admin", require("./routes/admin.routes"));
 // Port
 const PORT = process.env.PORT || 5000;
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0',() => {
   console.log(`Server is running on port ${PORT}`);
 });

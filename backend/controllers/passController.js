@@ -8,6 +8,37 @@ const mongoose = require("mongoose");
 ===================================================== */
 exports.createPass = async (req, res) => {
   try {
+    // 🔍 SAFETY CHECK (prevents crash)
+    if (!req.body) {
+      return res.status(400).json({
+        message: "Form data not received. Multer middleware missing.",
+      });
+    }
+
+    const {
+      assetName,
+      assetSerialNo,
+      externalPersonName,
+      externalPersonEmail,
+      externalPersonPhone,
+      passType,
+      purpose,
+      returnDateTime,
+    } = req.body;
+
+    // 🔒 REQUIRED FIELD VALIDATION
+    if (
+      !assetName ||
+      !assetSerialNo ||
+      !externalPersonName ||
+      !externalPersonEmail ||
+      !passType
+    ) {
+      return res.status(401).json({
+        message: "Required fields are missing",
+      });
+    }
+
     // 1. Find the HOD belonging to the same department as the staff
     const hod = await User.findOne({
       department: req.user.department,
@@ -15,26 +46,49 @@ exports.createPass = async (req, res) => {
     });
 
     if (!hod) {
-      return res.status(404).json({ message: "No HOD found for your department" });
+      return res
+        .status(404)
+        .json({ message: "No HOD found for your department" });
     }
 
     // 2. Create pass and link it to the found HOD's ID
     const pass = await Pass.create({
-      ...req.body,
       requester: req.user._id,
       requesterName: req.user.name,
       requesterEmail: req.user.email,
       department: req.user.department,
-      hod: hod._id, // Dashboard will filter by this ID
+      hod: hod._id,
+
+      assetName,
+      purpose,
+      assetSerialNo,
+      externalPersonName,
+      externalPersonEmail,
+      externalPersonPhone,
+
+      passType,
+      returnDateTime:
+        passType === "RETURNABLE" ? returnDateTime : null,
+
+      // Cloudinary image URL
+      photo: req.file ? req.file.path : null,
+
       status: "PENDING",
     });
 
-    await sendMail(hod.email, "New Request", `<p>Request from ${req.user.name}</p>`);
+    await sendMail(
+      hod.email,
+      "New Request",
+      `<p>Request from ${req.user.name}</p>`
+    );
+
     res.status(201).json(pass);
   } catch (error) {
+    console.error("CREATE PASS ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 exports.myPasses = async (req, res) => {
   try {
@@ -282,3 +336,43 @@ exports.getRecentPasses = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.getHistory = async (req, res) => {
+  try {
+    const { role, _id } = req.user; // from JWT middleware
+    let data = {};
+
+    // STAFF → their own passes
+    if (role === "STAFF") {
+      data = await Pass.find({ requester: _id })
+        .sort({ createdAt: -1 });
+    }
+
+    // HOD → passes approved/rejected by HOD department
+    if (role === "HOD") {
+      data = await Pass.find({
+        hod: _id,
+        status: { $in: ["APPROVED", "REJECTED"] },
+      }).sort({ updatedAt: -1 });
+    }
+
+    // ADMIN → all passes + user add/delete history
+    if (role === "ADMIN") {
+      const passes = await Pass.find().sort({ createdAt: -1 });
+      const users = await UserAuth.find({}, "name email role isDeleted createdAt");
+
+      data = { passes, users };
+    }
+
+    // SECURITY → only approved passes (for verification history)
+    if (role === "SECURITY") {
+      data = await Pass.find({ status: "APPROVED" })
+        .sort({ updatedAt: -1 });
+    }
+
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ message: "History fetch failed", error });
+  }
+};
+
