@@ -1,42 +1,37 @@
 require("dotenv").config();
 const nodemailer = require("nodemailer");
 
-// 1️⃣ Create transporter (Render-safe)
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // MUST be false for 587
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: false, // Brevo uses STARTTLS
   auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS, // Gmail App Password
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
-  connectionTimeout: 10000, // optional but helpful
+  connectionTimeout: 10000,
   greetingTimeout: 10000,
 });
 
-// 2️⃣ Verify SMTP connection
-transporter.verify((error, success) => {
+// Verify SMTP
+transporter.verify((error) => {
   if (error) {
-    console.error("❌ Mail Server Error:", error);
+    console.error("❌ Brevo Mail Error:", error);
   } else {
-    console.log("✅ Mail Server is ready to send messages");
+    console.log("✅ Brevo Mail Server is ready");
   }
 });
 
-// 3️⃣ Send mail function
 module.exports = async (to, subject, html) => {
   try {
-    const info = await transporter.sendMail({
-      from: `"Gate Pass System" <${process.env.MAIL_USER}>`,
+    return await transporter.sendMail({
+      from: `"Gate Pass System" <${process.env.SMTP_USER}>`,
       to,
       subject,
       html,
     });
-
-    console.log("📧 Email sent:", info.messageId);
-    return info;
   } catch (error) {
-    console.error("📧 Mail Send Error:", error);
+    console.error("📧 Brevo Send Error:", error);
     throw new Error("Email could not be sent");
   }
 };
