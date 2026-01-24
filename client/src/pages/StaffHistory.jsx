@@ -37,8 +37,8 @@ const StaffHistory = () => {
 
   const token = localStorage.getItem("token");
 
-  const API =
-    import.meta.env.VITE_API_URL || "http://localhost:5000/api/auth";
+  const API ="https://gate-pass-system-drti.onrender.com" ;
+    // import.meta.env.VITE_API_URL || "http://localhost:5000/api/auth";
  const role = user.role;
   useEffect(() => {
     fetchHistory();

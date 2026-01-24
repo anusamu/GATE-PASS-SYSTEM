@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import Sidebar from "../components/SideBar";
 import Navbar from "../components/Navbar";
-const API = "http://localhost:5000/api/auth";
+const API = "https://gate-pass-system-drti.onrender.com" ;
 
 const MyPass = () => {
   /* =========================

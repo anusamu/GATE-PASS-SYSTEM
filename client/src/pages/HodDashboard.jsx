@@ -32,7 +32,7 @@ import Sidebar from "../components/SideBar";
 import Navbar from "../components/Navbar";
 import PassDetails from "../components/PassDetailsDialog";
 
-const API = "http://localhost:5000/api/auth";
+const API = "https://gate-pass-system-drti.onrender.com" ;
 
 const HodDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");

@@ -26,8 +26,8 @@ import Navbar from "../components/Navbar";
 import AddUserDialog from "../components/AddUser";
 
 /* ✅ API BASE */
-const API = "http://localhost:5000/api/auth";
-
+// const API = "http://localhost:5000/api/auth" ;
+const API = "https://gate-pass-system-drti.onrender.com" ;
 const AdminDashboard = () => {
   /* =======================
      AUTH

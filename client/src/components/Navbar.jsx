@@ -19,7 +19,7 @@ import { Shield, ShieldCheck, Plus } from "lucide-react";
 import ProfileMenu from "./ProfileMenu";
 import AddPass from "./AddPass";
 import HodPassCreate from "./HodPasssCreate";
-const API = "http://localhost:5000/api/auth";
+const API = "https://gate-pass-system-drti.onrender.com" ;
 const GRADIENT = "linear-gradient(90deg,#22c55e,#2563eb)";
 
 /* =========================

@@ -19,7 +19,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 import { useState } from "react";
 
-const API = "http://localhost:5000/api/auth";
+const API = "https://gate-pass-system-drti.onrender.com" ;
 
 const HodPassCreate = ({ open, onClose, setPasses }) => {
   const token = localStorage.getItem("token");

@@ -19,7 +19,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 import { useState } from "react";
 
-const DEFAULT_API = "http://localhost:5000/api/auth";
+const DEFAULT_API = "https://gate-pass-system-drti.onrender.com" ;
 
 const AddPass = ({ open, onClose, setPasses, API = DEFAULT_API }) => {
   // ✅ READ TOKEN SAFELY HERE

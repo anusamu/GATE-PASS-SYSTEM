@@ -18,7 +18,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 // const API = import.meta.env.VITE_API || "http://10.206.73.6:5000/api/auth";
 
-const API = "http://localhost:5000/api/auth";
+const API = "https://gate-pass-system-drti.onrender.com" ;
 const GRADIENT = "linear-gradient(135deg,#2563eb,#22c55e)";
 
 function AuthPage() {

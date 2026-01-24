@@ -35,7 +35,7 @@ const HodHistory = () => {
 
   const token = localStorage.getItem("token");
 
-  const API = "http://localhost:5000/api/auth";
+const API = "https://gate-pass-system-drti.onrender.com" ;
 
   useEffect(() => {
     fetchHistory();
