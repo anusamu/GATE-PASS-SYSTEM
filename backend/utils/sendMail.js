@@ -1,16 +1,20 @@
-require('dotenv').config(); // Ensure variables are loaded
+require("dotenv").config();
 const nodemailer = require("nodemailer");
 
-// 1. Create the transporter
+// 1️⃣ Create transporter (Render-safe)
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // MUST be false for 587
   auth: {
     user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
+    pass: process.env.MAIL_PASS, // Gmail App Password
   },
+  connectionTimeout: 10000, // optional but helpful
+  greetingTimeout: 10000,
 });
 
-// 2. Verify the connection configuration on startup
+// 2️⃣ Verify SMTP connection
 transporter.verify((error, success) => {
   if (error) {
     console.error("❌ Mail Server Error:", error);
@@ -19,7 +23,7 @@ transporter.verify((error, success) => {
   }
 });
 
-// 3. Export the function with error handling
+// 3️⃣ Send mail function
 module.exports = async (to, subject, html) => {
   try {
     const info = await transporter.sendMail({
@@ -28,12 +32,11 @@ module.exports = async (to, subject, html) => {
       subject,
       html,
     });
-    
-    console.log("📧 Email sent: %s", info.messageId);
+
+    console.log("📧 Email sent:", info.messageId);
     return info;
   } catch (error) {
     console.error("📧 Mail Send Error:", error);
-    // Throw error or return false so the controller knows it failed
     throw new Error("Email could not be sent");
   }
 };

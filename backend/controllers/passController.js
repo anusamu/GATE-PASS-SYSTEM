@@ -125,27 +125,6 @@ exports.pendingApprovals = async (req, res) => {
   }
 };
 
-/* =====================================================
-   STAFF VIEW OWN PASSES
-===================================================== */
-
-
-/* =====================================================
-   HOD VIEW PENDING PASSES (ONLY HIS PASSES)
-===================================================== */
-// exports.pendingApprovals = async (req, res) => {
-//   try {
-//     const passes = await Pass.find({
-//       hod: req.user._id,        // ✅ MUST MATCH LOGGED-IN HOD
-//       status: "PENDING",
-//     }).sort({ createdAt: -1 });
-
-//     res.json(passes);
-//   } catch (error) {
-//     console.error("Pending approvals error:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
 
 /* =====================================================
    HOD APPROVE PASS
