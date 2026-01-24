@@ -2,7 +2,13 @@ const Pass = require("../models/Pass");
 const User = require("../models/User");
 const sendMail = require("../utils/sendMail");
 const mongoose = require("mongoose");
+const generatePassPDF = require("../utils/generatePassPDF");
+const path = require("path");
+const fs = require("fs");
 
+
+
+const baseUrl = process.env.APP_URL || "http://localhost:5000";
 /* =====================================================
    STAFF CREATE PASS  (Assign to SINGLE HOD)
 ===================================================== */
@@ -336,43 +342,318 @@ exports.getRecentPasses = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+// controllers/historyController.js
+
+
 
 exports.getHistory = async (req, res) => {
   try {
-    const { role, _id } = req.user; // from JWT middleware
-    let data = {};
+    // 🔐 req.user must come from auth middleware
+    if (!req.user || !req.user._id || !req.user.role) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: user not found",
+      });
+    }
 
-    // STAFF → their own passes
-    if (role === "STAFF") {
-      data = await Pass.find({ requester: _id })
+    const userId = req.user._id;
+    const role = String(req.user.role).toLowerCase();
+
+    let result = [];
+
+    /* ================= STAFF ================= */
+    if (role === "staff") {
+      result = await Pass.find({ requester: userId })
         .sort({ createdAt: -1 });
     }
 
-    // HOD → passes approved/rejected by HOD department
-    if (role === "HOD") {
-      data = await Pass.find({
-        hod: _id,
-        status: { $in: ["APPROVED", "REJECTED"] },
-      }).sort({ updatedAt: -1 });
+    /* ================= HOD ================= */
+    else if (role === "hod") {
+      result = await Pass.find({ hod: userId })
+        .sort({ createdAt: -1 });
     }
 
-    // ADMIN → all passes + user add/delete history
-    if (role === "ADMIN") {
-      const passes = await Pass.find().sort({ createdAt: -1 });
-      const users = await UserAuth.find({}, "name email role isDeleted createdAt");
-
-      data = { passes, users };
-    }
-
-    // SECURITY → only approved passes (for verification history)
-    if (role === "SECURITY") {
-      data = await Pass.find({ status: "APPROVED" })
+    /* ================= SECURITY ================= */
+    else if (role === "security") {
+      result = await Pass.find({ status: "APPROVED" })
         .sort({ updatedAt: -1 });
     }
 
-    res.status(200).json(data);
+    /* ================= NOT ALLOWED ================= */
+    else {
+      return res.status(403).json({
+        success: false,
+        message: "Role not authorized for history access",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: result, // always array
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "History fetch failed", error });
+    console.error("History error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch history",
+    });
   }
 };
 
+/* =====================================================
+   CREATE PASS BY HOD (AUTO APPROVED)
+===================================================== */
+exports.createPassHod = async (req, res) => {
+  try {
+    if (!req.body) {
+      return res.status(400).json({ message: "Form data missing" });
+    }
+
+    const {
+      assetName,
+      assetSerialNo,
+      externalPersonName,
+      externalPersonEmail,
+      externalPersonPhone,
+      passType,
+      purpose,
+      returnDateTime,
+    } = req.body;
+
+    const pass = await Pass.create({
+      requester: req.user._id,
+      requesterName: req.user.name,
+      requesterEmail: req.user.email,
+      department: req.user.department,
+      hod: req.user._id,
+
+      assetName,
+      assetSerialNo,
+      purpose,
+      externalPersonName,
+      externalPersonEmail,
+      externalPersonPhone,
+
+      passType,
+      returnDateTime: passType === "RETURNABLE" ? returnDateTime : null,
+      photo: req.file ? req.file.path : null,
+
+      status: "APPROVED",
+      approvedAt: new Date(),
+    });
+
+    // Generate PDF
+    const pdfPath = await generatePassPDF(pass);
+
+    // Send mail to external person
+    await sendMail(
+      pass.externalPersonEmail,
+      "Gate Pass Approved",
+      `
+        <p>Hello ${pass.externalPersonName},</p>
+        <p>Your gate pass has been <b>APPROVED</b>.</p>
+        <p>
+          <a href="${process.env.BACKEND_URL}/api/auth/pass/view/${pass._id}">
+            View & Download Gate Pass
+          </a>
+        </p>
+        <p>Regards,<br/>Security Team</p>
+      `,
+      [
+        {
+          filename: "GatePass.pdf",
+          path: pdfPath,
+        },
+      ]
+    );
+
+    res.status(201).json({ message: "Pass created & approved", pass });
+  } catch (error) {
+    console.error("HOD CREATE PASS ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* =====================================================
+   HOD APPROVE PASS (REQUEST FLOW)
+===================================================== */
+exports.hodapprovePass = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Pass ID format" });
+    }
+
+    const pass = await Pass.findById(id);
+    if (!pass) {
+      return res.status(404).json({ message: "Pass not found" });
+    }
+
+    if (pass.hod.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    if (pass.status !== "PENDING") {
+      return res.status(400).json({ message: `Already ${pass.status}` });
+    }
+
+    pass.status = "APPROVED";
+    pass.approvedAt = new Date();
+    await pass.save();
+
+    const pdfPath = await generatePassPDF(pass);
+
+    const recipients = [
+      pass.requesterEmail,
+      pass.externalPersonEmail,
+    ].filter(Boolean);
+
+    if (recipients.length > 0) {
+      await sendMail(
+        recipients,
+        "Gate Pass Approved",
+        `
+          <p>Hello,</p>
+          <p>Your gate pass has been <b>APPROVED</b>.</p>
+          <p>
+            <a href="${process.env.BACKEND_URL}/api/auth/pass/view/${pass._id}">
+              View & Download Gate Pass
+            </a>
+          </p>
+        `,
+        [
+          {
+            filename: "GatePass.pdf",
+            path: pdfPath,
+          },
+        ]
+      );
+    }
+
+    res.json({ message: "Gate pass approved", pass });
+  } catch (error) {
+    console.error("APPROVE PASS ERROR:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* =====================================================
+   DOWNLOAD PASS PDF
+===================================================== */
+exports.downloadPass = async (req, res) => {
+  try {
+    const filePath = path.join(
+      __dirname,
+      "../uploads/passes",
+      `gatepass-${req.params.id}.pdf`
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send("PDF not found");
+    }
+
+    res.download(filePath, "GatePass.pdf");
+  } catch (error) {
+    console.error("DOWNLOAD PASS ERROR:", error);
+    res.status(500).send("Server error");
+  }
+};
+
+/* =====================================================
+   VIEW PASS DETAILS (HTML PAGE)
+===================================================== */
+exports.viewPass = async (req, res) => {
+  try {
+    const pass = await Pass.findById(req.params.id);
+
+    if (!pass || pass.status !== "APPROVED") {
+      return res.status(404).send("<h2>Pass not found or not approved</h2>");
+    }
+
+    const pdfUrl = `${process.env.BACKEND_URL}/api/auth/pass/download/${pass._id}`;
+
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Gate Pass</title>
+        <meta charset="UTF-8" />
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            padding: 40px;
+          }
+          .card {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          }
+          h2 {
+            text-align: center;
+            color: #2563eb;
+          }
+          .row {
+            margin-bottom: 10px;
+          }
+          .label {
+            font-weight: bold;
+            color: #333;
+          }
+          .btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 20px;
+            background: #22c55e;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h2>Gate Pass</h2>
+
+          <div class="row"><span class="label">Requester:</span> ${pass.requesterName}</div>
+          <div class="row"><span class="label">Department:</span> ${pass.department}</div>
+
+          <hr />
+
+          <div class="row"><span class="label">Asset:</span> ${pass.assetName}</div>
+          <div class="row"><span class="label">Serial No:</span> ${pass.assetSerialNo}</div>
+          <div class="row"><span class="label">Purpose:</span> ${pass.purpose || "-"}</div>
+
+          <hr />
+
+          <div class="row"><span class="label">External Person:</span> ${pass.externalPersonName}</div>
+          <div class="row"><span class="label">Email:</span> ${pass.externalPersonEmail}</div>
+
+          ${
+            pass.passType === "RETURNABLE"
+              ? `<div class="row"><span class="label">Return Date:</span> ${new Date(
+                  pass.returnDateTime
+                ).toLocaleString()}</div>`
+              : ""
+          }
+
+          <div style="text-align:center">
+            <a class="btn" href="${pdfUrl}" target="_blank">
+              Download Gate Pass (PDF)
+            </a>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error("VIEW PASS ERROR:", error);
+    res.status(500).send("<h2>Server error</h2>");
+  }
+};

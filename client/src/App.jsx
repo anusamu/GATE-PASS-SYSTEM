@@ -6,9 +6,9 @@ import HodDashboard from "./pages/HodDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import StaffMypass from "./pages/StaffMypass";
 import StaffHistory from "./pages/StaffHistory";
-
 import PrivateRoute from "./routes/PrivateRoute";
 import RoleRoute from "./routes/RoleRoute";
+import HodHistory from "./pages/HodHistory";
 
 function App() {
   return (
@@ -37,14 +37,18 @@ function App() {
           }
         />
 
-        <Route
-          path="/dashboard/history"
+        {/* <Route
+          path="/history"
           element={
             <PrivateRoute>
               <StaffHistory />
             </PrivateRoute>
           }
-        />
+        /> */}
+
+<Route path="/dashboard/history" element={<StaffHistory />} />
+<Route path="/hod/history" element={<HodHistory/>} />
+
 
         {/* HOD ROUTE */}
         <Route

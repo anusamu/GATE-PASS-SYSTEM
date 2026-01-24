@@ -12,17 +12,22 @@ const {
 const {
   createPass,
   myPasses,
+  viewPass,
   pendingApprovals,
   approvePass,
   rejectPass,
-  getRecentPasses, // 1. Added this here
+  getRecentPasses,
+  getHistory ,
+  createPassHod,
+  downloadPass,
+  hodapprovePass// 1. Added this here
 } = require("../controllers/passController");
 
 // Import Middleware
 const { protect } = require("../middleware/authMiddleware"); 
 const { authorize } = require("../middleware/roleMiddleware");
 const upload = require("../middleware/upload");
-const { getHistory } = require("../controllers/passController");
+
 
 const {
   getUsers,
@@ -56,11 +61,32 @@ router.get("/hod/pending", protect, authorize("hod"), pendingApprovals);
 // HOD: Approve and Reject
 router.put("/hod/approve/:id", protect, authorize("hod"), approvePass);
 router.put("/hod/reject/:id", protect, authorize("hod"), rejectPass);
+router.post(
+  "/hod/create",
+  protect,
+  upload.single("photo"),
+  createPassHod
+);
 
-// history of view and user
-router.get("/passhistory", protect, getHistory);
+/* =========================
+   HOD APPROVE PASS
+========================= */
+router.put("/hod/approve/:id", protect, hodapprovePass);
 
+/* =========================
+   DOWNLOAD PASS PDF
+========================= */
+router.get("/pass/download/:id", downloadPass);
 
+/* =========================
+   VIEW PASS (HTML PAGE)
+========================= */
+router.get("/pass/view/:id", viewPass);
+
+/* =========================
+   PASS HISTORY
+========================= */
+router.get("/history", protect, getHistory);
 // Admin dashboard
 
 router.get("/users", protect, getUsers);

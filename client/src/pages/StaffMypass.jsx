@@ -13,13 +13,14 @@ import {
   Chip,
 } from "@mui/material";
 import Sidebar from "../components/SideBar";
-
+import Navbar from "../components/Navbar";
 const API = "http://localhost:5000/api/auth";
 
 const MyPass = () => {
   /* =========================
      SIDEBAR STATE
   ========================= */
+  const [showPassModal, setShowPassModal] = useState(false);
   const [activeTab, setActiveTab] = useState("my-passes");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -30,7 +31,7 @@ const MyPass = () => {
      PASSES STATE
   ========================= */
   const [passes, setPasses] = useState([]);
-
+ const role = user.role;
   useEffect(() => {
     fetchPasses();
   }, []);
@@ -56,11 +57,7 @@ const MyPass = () => {
 
   return (
     <Box
-      component="main"
-      sx={{
-        ml: { sm: collapsed ? "72px" : "260px" },
-        transition: "margin 0.3s",
-      }}
+   
     >
       {/* SIDEBAR */}
       <Sidebar
@@ -72,7 +69,22 @@ const MyPass = () => {
         collapsed={collapsed}
         setCollapsed={setCollapsed}
       />
-
+<Box
+        component="main"
+        sx={{
+          ml: { sm: collapsed ? "72px" : "260px" },
+          transition: "margin 0.3s",
+          minHeight: "100vh",
+          bgcolor: "#f8fafc",
+          p: 3,
+        }}
+      >
+        {/* NAVBAR */}
+        <Navbar
+          role={role}
+          setMobileOpen={setMobileOpen}
+          setShowPassModal={setShowPassModal}
+        />
       {/* PAGE CONTENT */}
       <Box p={3}>
         <Typography variant="h6" fontWeight={800} mb={2}>
@@ -130,6 +142,7 @@ const MyPass = () => {
           </Table>
         </TableContainer>
       </Box>
+    </Box>
     </Box>
   );
 };

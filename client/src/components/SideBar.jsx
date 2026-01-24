@@ -33,7 +33,7 @@ const MINI_WIDTH = 72;
 const GRADIENT = "linear-gradient(135deg,#2563eb,#22c55e)";
 
 const Sidebar = ({
-  user,
+  user = {},
   activeTab,
   setActiveTab,
   mobileOpen,
@@ -43,10 +43,16 @@ const Sidebar = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const role = user?.role;
   const navigate = useNavigate();
 
-  /* ===== ROLE BASED MENU ===== */
+  /* =========================
+     SAFE ROLE
+  ========================= */
+  const role = String(user?.role || "").toLowerCase();
+
+  /* =========================
+     ROLE BASED MENU
+  ========================= */
   const menuByRole = {
     staff: [
       { id: "dashboard", label: "Dashboard", icon: <Dashboard /> },
@@ -55,15 +61,12 @@ const Sidebar = ({
     ],
     hod: [
       { id: "dashboard", label: "HOD Dashboard", icon: <Dashboard /> },
-      { id: "approved", label: "Approved", icon: <CheckCircle /> },
-      { id: "rejected", label: "Rejected", icon: <Cancel /> },
       { id: "history", label: "History", icon: <History /> },
     ],
     admin: [
       { id: "dashboard", label: "Admin Dashboard", icon: <Dashboard /> },
-      { id: "users", label: "Users", icon: <People /> },
-      { id: "approved", label: "Approved", icon: <CheckCircle /> },
-      { id: "history", label: "History", icon: <History /> },
+      // { id: "users", label: "Users", icon: <People /> },
+      // { id: "approved", label: "Approved Passes", icon: <CheckCircle /> },
     ],
     security: [
       { id: "dashboard", label: "Security Dashboard", icon: <Dashboard /> },
@@ -72,24 +75,37 @@ const Sidebar = ({
     ],
   };
 
-  /* ===== DASHBOARD ROUTE BY ROLE ===== */
+  /* =========================
+     ROUTES
+  ========================= */
   const dashboardRouteByRole = {
     staff: "/dashboard",
-    security: "/dashboard",
     hod: "/hod/dashboard",
     admin: "/admin/dashboard",
+    security: "/security/dashboard",
   };
 
-  /* ===== ROUTES ===== */
+  const historyRouteByRole = {
+    staff: "/dashboard/history",
+    hod: "/hod/history",
+  };
+
   const routeMap = {
     dashboard: dashboardRouteByRole[role],
-    "my-passes": "/dashboard/mypass",
-    history: "/dashboard/history",
+    "my-passes": role === "staff" ? "/dashboard/mypass" : null,
+    history: historyRouteByRole[role],
+    approved: "/dashboard/approved",
+    rejected: "/dashboard/rejected",
+    verified: "/dashboard/verified",
+    users: "/admin/users",
   };
 
   const menuItems = menuByRole[role] || [];
   const drawerWidth = collapsed ? MINI_WIDTH : FULL_WIDTH;
 
+  /* =========================
+     SIDEBAR CONTENT
+  ========================= */
   const content = (
     <Box
       sx={{
@@ -138,6 +154,7 @@ const Sidebar = ({
       <List sx={{ px: 1.5, mt: 2 }}>
         {menuItems.map((item) => {
           const selected = activeTab === item.id;
+          const route = routeMap[item.id];
 
           return (
             <Tooltip
@@ -147,13 +164,10 @@ const Sidebar = ({
             >
               <ListItemButton
                 selected={selected}
+                disabled={!route}
                 onClick={() => {
                   setActiveTab(item.id);
-
-                  if (routeMap[item.id]) {
-                    navigate(routeMap[item.id]);
-                  }
-
+                  if (route) navigate(route);
                   if (isMobile) setMobileOpen(false);
                 }}
                 sx={{
