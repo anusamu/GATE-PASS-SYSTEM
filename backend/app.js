@@ -35,7 +35,7 @@ app.use(
 /* =====================
    ROUTES
 ===================== */
-app.use("/api/auth", require("./routes/auth.routes"));
+app.use("/", require("./routes/auth.routes"));
 
 /* =====================
    SERVER START
