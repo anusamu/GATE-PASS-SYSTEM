@@ -6,149 +6,21 @@ const generatePassPDF = require("../utils/generatePassPDF");
 const path = require("path");
 const fs = require("fs");
 
+const isValidEmail = (email) =>
+  typeof email === "string" &&
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+const buildRecipients = (...emails) =>
+  emails
+    .map((e) => e?.trim())
+    .filter(isValidEmail)
+    .map((email) => ({ email }));
+
 
 
 const baseUrl = process.env.APP_URL || "http://localhost:5000";
-/* =====================================================
-   STAFF CREATE PASS  (Assign to SINGLE HOD)
-===================================================== */
-// exports.createPass = async (req, res) => {
-//   try {
-//     // 🔍 SAFETY CHECK (prevents crash)
-//     if (!req.body) {
-//       return res.status(400).json({
-//         message: "Form data not received. Multer middleware missing.",
-//       });
-//     }
-
-//     const {
-//       assetName,
-//       assetSerialNo,
-//       externalPersonName,
-//       externalPersonEmail,
-//       externalPersonPhone,
-//       passType,
-//       purpose,
-//       returnDateTime,
-//     } = req.body;
-
-//     // 🔒 REQUIRED FIELD VALIDATION
-//     if (
-//       !assetName ||
-//       !assetSerialNo ||
-//       !externalPersonName ||
-//       !externalPersonEmail ||
-//       !passType
-//     ) {
-//       return res.status(401).json({
-//         message: "Required fields are missing",
-//       });
-//     }
-
-//     // 1. Find the HOD belonging to the same department as the staff
-//     const hod = await User.findOne({
-//       department: req.user.department,
-//       role: "hod",
-//     });
-
-//     if (!hod) {
-//       return res
-//         .status(404)
-//         .json({ message: "No HOD found for your department" });
-//     }
-
-//     // 2. Create pass and link it to the found HOD's ID
-//     const pass = await Pass.create({
-//       requester: req.user._id,
-//       requesterName: req.user.name,
-//       requesterEmail: req.user.email,
-//       department: req.user.department,
-//       hod: hod._id,
-
-//       assetName,
-//       purpose,
-//       assetSerialNo,
-//       externalPersonName,
-//       externalPersonEmail,
-//       externalPersonPhone,
-
-//       passType,
-//       returnDateTime:
-//         passType === "RETURNABLE" ? returnDateTime : null,
-
-//       // Cloudinary image URL
-//       photo: req.file ? req.file.path : null,
-
-//       status: "PENDING",
-//     });
-
-//     await sendMail(
-//       hod.email,
-//     " New Gate Pass Request",
-//   `
-// <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
-//   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-    
-//     <div style="background: linear-gradient(135deg, #048cedff 0%, #09f097ff 100%); padding: 30px; text-align: center;">
-//       <img src="https://technopark.in/tp-logo.png" alt="Technopark" style="width: 180px; filter: brightness(0) invert(1);">
-//     </div>
-
-//     <div style="padding: 40px 30px;">
-//       <h2 style="color: #333; margin-top: 0; font-size: 24px; font-weight: 800;">New Approval Request</h2>
-      
-//       <p style="color: #555; font-size: 16px;">Hello,</p>
-      
-//       <p style="color: #555; font-size: 16px;">
-//         A new gate pass request has been submitted by <strong>${req.user.name}</strong> for the following asset:
-//       </p>
-
-//       <div style="background-color: #f8fafb; border-radius: 8px; padding: 20px; border-left: 4px solid #007cf0; margin: 25px 0;">
-//         <p style="margin: 5px 0; font-size: 15px; color: #333;"><strong>Asset:</strong> ${pass.assetName}</p>
-//         <p style="margin: 5px 0; font-size: 15px; color: #333;"><strong>Serial No:</strong> ${pass.assetSerialNo}</p>
-//       </div>
-
-//       <p style="color: #555; font-size: 14px;">
-//         Please log in to the portal to review the details and provide your approval.
-//       </p>
-
-//       <div style="text-align: center; margin-top: 30px;">
-//         <a href="https://gate-pass-system-kappa.vercel.app/" 
-//            style="background: linear-gradient(135deg, #007cf0 0%, #00dfd8 100%); 
-//                   color: white; 
-//                   padding: 14px 32px; 
-//                   text-decoration: none; 
-//                   border-radius: 6px; 
-//                   font-weight: bold; 
-//                   display: inline-block;
-//                   box-shadow: 0 4px 10px rgba(0,124,240,0.3);">
-//             Login to Approve
-//         </a>
-//       </div>
-//     </div>
-    
-//     <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #999;">
-//       This is an automated notification from the Technopark Gate Pass System.
-//     </div>
-//   </div>
-// </div>
-// `
-//     );
-
-//     res.status(201).json(pass);
-//   } catch (error) {
-//     console.error("CREATE PASS ERROR:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
 exports.createPass = async (req, res) => {
   try {
-    // 🔍 SAFETY CHECK
-    if (!req.body) {
-      return res.status(400).json({
-        message: "Form data not received. Multer middleware missing.",
-      });
-    }
-
     const {
       assetName,
       assetSerialNo,
@@ -160,64 +32,46 @@ exports.createPass = async (req, res) => {
       returnDateTime,
     } = req.body;
 
-    // 🔒 REQUIRED FIELD VALIDATION
-    if (
-      !assetName ||
-      !assetSerialNo ||
-      !externalPersonName ||
-      !externalPersonEmail ||
-      !passType
-    ) {
-      return res.status(401).json({
-        message: "Required fields are missing",
-      });
+    if (!assetName || !assetSerialNo || !externalPersonName || !externalPersonEmail || !passType) {
+      return res.status(400).json({ message: "Required fields missing" });
     }
 
-    // 1️⃣ Find HOD of same department
     const hod = await User.findOne({
       department: req.user.department,
       role: "hod",
     });
 
     if (!hod) {
-      return res
-        .status(404)
-        .json({ message: "No HOD found for your department" });
+      return res.status(404).json({ message: "No HOD found" });
     }
 
-    // 2️⃣ Create Pass
     const pass = await Pass.create({
       requester: req.user._id,
       requesterName: req.user.name,
       requesterEmail: req.user.email,
       department: req.user.department,
       hod: hod._id,
-
       assetName,
-      purpose,
       assetSerialNo,
+      purpose,
       externalPersonName,
       externalPersonEmail,
       externalPersonPhone,
-
       passType,
-      returnDateTime:
-        passType === "RETURNABLE" ? returnDateTime : null,
-
-      // 📷 Cloudinary image
+      returnDateTime: passType === "RETURNABLE" ? returnDateTime : null,
       photo: req.file ? req.file.path : null,
-
       status: "PENDING",
     });
 
-    // ✅ RESPOND TO USER IMMEDIATELY (FAST)
     res.status(201).json(pass);
 
-    // 3️⃣ SEND EMAIL IN BACKGROUND (NON-BLOCKING)
-    sendMail(
-      hod.email,
-      "New Gate Pass Request",
-      `
+    const recipients = buildRecipients(hod.email);
+
+    if (recipients.length) {
+      sendMail(
+        recipients,
+        "New Gate Pass Request",
+       `
 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     
@@ -268,15 +122,15 @@ exports.createPass = async (req, res) => {
   </div>
 </div>
 `
-    ).catch((err) => {
-      console.error("📧 Email send failed:", err);
-    });
-
+      ).catch(console.error);
+    }
   } catch (error) {
     console.error("CREATE PASS ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 
 exports.myPasses = async (req, res) => {
@@ -316,41 +170,35 @@ exports.approvePass = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 1. Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid Pass ID format" });
+      return res.status(400).json({ message: "Invalid Pass ID" });
     }
 
     const pass = await Pass.findById(id);
+    if (!pass) return res.status(404).json({ message: "Pass not found" });
 
-    if (!pass) {
-      return res.status(404).json({ message: "Pass not found" });
-    }
-
-    // 2. Authorization Check (Must be the assigned HOD)
     if (pass.hod.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to approve this pass" });
+      return res.status(403).json({ message: "Not authorized" });
     }
 
-    // 3. Status Check
     if (pass.status !== "PENDING") {
-      return res.status(400).json({ message: `Pass already ${pass.status.toLowerCase()}` });
+      return res.status(400).json({ message: `Already ${pass.status}` });
     }
 
-    // 4. Update Pass
     pass.status = "APPROVED";
     pass.approvedAt = new Date();
     await pass.save();
 
-    // 5. Send Emails (Non-blocking)
-    const recipients = [pass.requesterEmail, pass.externalPersonEmail].filter(Boolean);
+    const recipients = buildRecipients(
+      pass.requesterEmail,
+      pass.externalPersonEmail
+    );
 
-if (recipients.length > 0) {
-  sendMail(
-    recipients,
-    "Gate Pass Approved", // ✅ SUBJECT REQUIRED
-    `
-<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
+    if (recipients.length) {
+      sendMail(
+        recipients,
+        "Gate Pass Approved",
+       `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     
     <div style="background: linear-gradient(135deg, #048cedff 0%, #09f097ff 100%); padding: 30px; text-align: center;">
@@ -379,7 +227,7 @@ if (recipients.length > 0) {
       </div>
 
       <div style="text-align: center; margin-top: 30px;">
-        <a href="https://your-app-link.com/pass/${pass._id}" 
+        <a href="${process.env.BACKEND_URL}/pass/view/${pass._id}" 
            style="background: linear-gradient(135deg, #007cf0 0%, #00dfd8 100%); 
                   color: white; 
                   padding: 14px 32px; 
@@ -395,15 +243,17 @@ if (recipients.length > 0) {
   </div>
 </div>
     `
-  ).catch(err => console.error("Email Error:", err));
-}
+      ).catch(console.error);
+    }
 
-    res.json({ message: "Gate pass approved successfully", pass });
+    res.json({ message: "Gate pass approved", pass });
   } catch (error) {
-    console.error("Approve pass error:", error);
+    console.error("APPROVE PASS ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 /* =====================================================
    HOD REJECT PASS
@@ -413,37 +263,28 @@ exports.rejectPass = async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid Pass ID format" });
-    }
-
     const pass = await Pass.findById(id);
-
-    if (!pass) {
-      return res.status(404).json({ message: "Pass not found" });
-    }
+    if (!pass) return res.status(404).json({ message: "Pass not found" });
 
     if (pass.hod.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to reject this pass" });
+      return res.status(403).json({ message: "Not authorized" });
     }
 
-    if (pass.status !== "PENDING") {
-      return res.status(400).json({ message: `Pass already ${pass.status.toLowerCase()}` });
-    }
-
-    // Update Pass
     pass.status = "REJECTED";
-    pass.rejectionReason = reason || "No specific reason provided by HOD";
+    pass.rejectionReason = reason || "No reason provided";
     pass.rejectedAt = new Date();
     await pass.save();
 
-    // Send Emails
-    const recipients = [pass.requesterEmail, pass.externalPersonEmail].filter(Boolean);
-   if (recipients.length > 0) {
-  sendMail(
-    recipients,
-    "Gate Pass Rejected",
-    `
+    const recipients = buildRecipients(
+      pass.requesterEmail,
+      pass.externalPersonEmail
+    );
+
+    if (recipients.length) {
+      sendMail(
+        recipients,
+        "Gate Pass Rejected",
+       `
 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     
@@ -490,27 +331,16 @@ exports.rejectPass = async (req, res) => {
   </div>
 </div>
     `
-  ).catch(err => console.error("Email Error:", err));
-}
+      ).catch(console.error);
+    }
 
-
-    res.json({ message: "Gate pass rejected successfully", pass });
+    res.json({ message: "Gate pass rejected", pass });
   } catch (error) {
-    console.error("Reject pass error:", error);
+    console.error("REJECT PASS ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
-exports.getRecentPasses = async (req, res) => {
-  try {
-    const passes = await Pass.find({ requester: req.user._id })
-      .sort({ createdAt: -1 })
-      .limit(4);
-    res.json(passes);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-};
-// controllers/historyController.js
+
 
 
 
@@ -574,51 +404,24 @@ exports.getHistory = async (req, res) => {
 ===================================================== */
 exports.createPassHod = async (req, res) => {
   try {
-    if (!req.body) {
-      return res.status(400).json({ message: "Form data missing" });
-    }
-
-    const {
-      assetName,
-      assetSerialNo,
-      externalPersonName,
-      externalPersonEmail,
-      externalPersonPhone,
-      passType,
-      purpose,
-      returnDateTime,
-    } = req.body;
-
     const pass = await Pass.create({
       requester: req.user._id,
       requesterName: req.user.name,
       requesterEmail: req.user.email,
       department: req.user.department,
       hod: req.user._id,
-
-      assetName,
-      assetSerialNo,
-      purpose,
-      externalPersonName,
-      externalPersonEmail,
-      externalPersonPhone,
-
-      passType,
-      returnDateTime: passType === "RETURNABLE" ? returnDateTime : null,
-      photo: req.file ? req.file.path : null,
-
+      ...req.body,
       status: "APPROVED",
       approvedAt: new Date(),
     });
 
-    // Generate PDF
-    const pdfPath = await generatePassPDF(pass);
+    const recipients = buildRecipients(pass.externalPersonEmail);
 
-    // Send mail to external person
-    await sendMail(
-      pass.externalPersonEmail,
-     "Gate Pass Approved",
-  `
+    if (recipients.length) {
+      await sendMail(
+        recipients,
+        "Gate Pass Approved",
+        `
 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     
@@ -674,14 +477,9 @@ exports.createPassHod = async (req, res) => {
     </div>
   </div>
 </div>
-`,
-      [
-        {
-          filename: "GatePass.pdf",
-          path: pdfPath,
-        },
-      ]
-    );
+`
+      );
+    }
 
     res.status(201).json({ message: "Pass created & approved", pass });
   } catch (error) {
@@ -690,69 +488,7 @@ exports.createPassHod = async (req, res) => {
   }
 };
 
-/* =====================================================
-   HOD APPROVE PASS (REQUEST FLOW)
-===================================================== */
-// exports.hodapprovePass = async (req, res) => {
-//   try {
-//     const { id } = req.params;
 
-//     if (!mongoose.Types.ObjectId.isValid(id)) {
-//       return res.status(400).json({ message: "Invalid Pass ID format" });
-//     }
-
-//     const pass = await Pass.findById(id);
-//     if (!pass) {
-//       return res.status(404).json({ message: "Pass not found" });
-//     }
-
-//     if (pass.hod.toString() !== req.user._id.toString()) {
-//       return res.status(403).json({ message: "Not authorized" });
-//     }
-
-//     if (pass.status !== "PENDING") {
-//       return res.status(400).json({ message: `Already ${pass.status}` });
-//     }
-
-//     pass.status = "APPROVED";
-//     pass.approvedAt = new Date();
-//     await pass.save();
-
-//     const pdfPath = await generatePassPDF(pass);
-
-//     const recipients = [
-//       pass.requesterEmail,
-//       pass.externalPersonEmail,
-//     ].filter(Boolean);
-
-//     if (recipients.length > 0) {
-//       await sendMail(
-//         recipients,
-//         "Gate Pass Approved",
-//         `
-//           <p>Hello,</p>
-//           <p>Your gate pass has been <b>APPROVED</b>.</p>
-//           <p>
-//             <a href="${process.env.BACKEND_URL}/api/auth/pass/view/${pass._id}">
-//               View & Download Gate Pass
-//             </a>
-//           </p>
-//         `,
-//         [
-//           {
-//             filename: "GatePass.pdf",
-//             path: pdfPath,
-//           },
-//         ]
-//       );
-//     }
-
-//     res.json({ message: "Gate pass approved", pass });
-//   } catch (error) {
-//     console.error("APPROVE PASS ERROR:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
 
 /* =====================================================
    DOWNLOAD PASS PDF

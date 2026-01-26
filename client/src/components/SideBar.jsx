@@ -115,8 +115,8 @@ const Sidebar = ({
         flexDirection: "column",
         bgcolor: "rgba(255,255,255,0.9)",
         backdropFilter: "blur(16px)",
-        borderTopRightRadius: 24,
-        borderBottomRightRadius: 24,
+        borderTopRightRadius: 22,
+        borderBottomRightRadius: 22,
       }}
     >
       {/* HEADER */}
@@ -127,14 +127,14 @@ const Sidebar = ({
           justifyContent: "space-between",
           alignItems: "center",
           background: GRADIENT,
-          borderRadius:5
+          borderRadius:4
           // borderBottomLeftRadius: 20,
           // borderBottomRightRadius: 20,
         }}
       >
     {!collapsed && (
   <Stack spacing={0} alignItems="flex-start">
-    <Typography fontWeight={1000} color="#fff" fontSize={20}>
+    <Typography fontWeight={1000} color="#fff" fontSize={19}>
       Technopark
     </Typography>
     <Typography fontWeight={800} color="#fff" fontSize={16}>
