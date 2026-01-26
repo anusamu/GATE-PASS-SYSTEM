@@ -1,37 +1,30 @@
 require("dotenv").config();
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT),
-  secure: false, // Brevo uses STARTTLS
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-});
-
-// Verify SMTP
-transporter.verify((error) => {
-  if (error) {
-    console.error("❌ Brevo Mail Error:", error);
-  } else {
-    console.log("✅ Brevo Mail Server is ready");
-  }
-});
+const SibApiV3Sdk = require("sib-api-v3-sdk");
 
 module.exports = async (to, subject, html) => {
   try {
-    return await transporter.sendMail({
-      from: `"Gate Pass System" <${process.env.SMTP_USER}>`,
-      to,
+    const client = SibApiV3Sdk.ApiClient.instance;
+
+    // Authenticate API Key
+    const apiKey = client.authentications["api-key"];
+    apiKey.apiKey = process.env.BREVO_API_KEY;
+
+    const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+
+    const emailData = {
+      sender: {
+        email: process.env.BREVO_SENDER_EMAIL,
+        name: "Gate Pass System",
+      },
+      to: [{ email: to }],
       subject,
-      html,
-    });
+      htmlContent: html,
+    };
+
+    await apiInstance.sendTransacEmail(emailData);
+    return true;
   } catch (error) {
-    console.error("📧 Brevo Send Error:", error);
+    console.error("📧 Brevo API Error:", error);
     throw new Error("Email could not be sent");
   }
 };
