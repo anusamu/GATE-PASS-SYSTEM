@@ -12,6 +12,7 @@ import {
   Tooltip,
   Backdrop,
   useMediaQuery,
+  Stack
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -130,11 +131,17 @@ const Sidebar = ({
           borderBottomRightRadius: 20,
         }}
       >
-        {!collapsed && (
-          <Typography fontWeight={900} color="#fff">
-            GatePass Pro
-          </Typography>
-        )}
+    {!collapsed && (
+  <Stack spacing={0} alignItems="flex-start">
+    <Typography fontWeight={900} color="#fff" fontSize={18}>
+      Technopark
+    </Typography>
+    <Typography fontWeight={600} color="#fff" fontSize={14}>
+      Gate Pass System
+    </Typography>
+  </Stack>
+)}
+
 
         {!isMobile && (
           <IconButton
@@ -210,9 +217,15 @@ const Sidebar = ({
 
       {!collapsed && (
         <Box p={2}>
-          <Typography fontSize={12} color="success.main">
-            ● Live & Secure
-          </Typography>
+          <Box
+  component="img"
+  src="/tp-logo.png"
+  alt="Technopark"
+  sx={{
+    height: 28,
+    width: "auto",
+  }}
+/>
         </Box>
       )}
     </Box>

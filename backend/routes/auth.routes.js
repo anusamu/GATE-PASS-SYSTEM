@@ -71,7 +71,7 @@ router.post(
 /* =========================
    HOD APPROVE PASS
 ========================= */
-router.put("/hod/approve/:id", protect, hodapprovePass);
+// router.put("/hod/approve/:id", protect, hodapprovePass);
 
 /* =========================
    DOWNLOAD PASS PDF

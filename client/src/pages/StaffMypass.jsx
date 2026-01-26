@@ -17,19 +17,19 @@ import Navbar from "../components/Navbar";
 const API = "https://gate-pass-system-drti.onrender.com" ;
 
 const MyPass = () => {
-  /* =========================
-     SIDEBAR STATE
-  ========================= */
+ 
+    //  SIDEBAR STATE
+
   const [showPassModal, setShowPassModal] = useState(false);
   const [activeTab, setActiveTab] = useState("my-passes");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-
+  
   const user = { role: localStorage.getItem("role") };
 
-  /* =========================
-     PASSES STATE
-  ========================= */
+const [open, setOpen] = useState(false);//pass Deatils
+    //  PASSES STATE
+
   const [passes, setPasses] = useState([]);
  const role = user.role;
   useEffect(() => {
@@ -56,6 +56,7 @@ const MyPass = () => {
   };
 
   return (
+     <>
     <Box
    
     >
@@ -144,6 +145,12 @@ const MyPass = () => {
       </Box>
     </Box>
     </Box>
+      <PassDetails
+            open={open}
+            onClose={() => setOpen(false)}
+            pass={pass}
+          />
+         </>
   );
 };
 

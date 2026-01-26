@@ -56,7 +56,7 @@ const PassDetails = ({ open, onClose, pass }) => {
       {/* HEADER SECTION */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #2563eb, #22c55e)",
+          background: "linear-gradient(135deg,#2563eb,#22c55e)",
           color: "white",
           p: 4,
         }}

@@ -27,7 +27,7 @@ const ProfileMenu = () => {
   const photo = localStorage.getItem("photo") || "";
 
   // Gradient Theme Colors
-  const mainGradient = "linear-gradient(135deg, #007cf0 0%, #09f08cff 100%)";
+  const mainGradient = "linear-gradient(135deg,#2563eb,#22c55e)";
 
   const handleOpen = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);

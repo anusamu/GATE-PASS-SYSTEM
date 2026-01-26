@@ -16,15 +16,16 @@ import {
 import Sidebar from "../components/SideBar";
 import Navbar from "../components/Navbar";
 
-const StaffHistory = () => {
+const StaffHistory = ({pass}) => {
    
 
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
- const [showPassModal, setShowPassModal] = useState(false);
+  const [showPassModal, setShowPassModal] = useState(false);
   const [activeTab, setActiveTab] = useState("history");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [open, setOpen] = useState(false);
 
   // ✅ FORCE USER ROLE (IMPORTANT)
   const storedUser = localStorage.getItem("user");
@@ -38,7 +39,6 @@ const StaffHistory = () => {
   const token = localStorage.getItem("token");
 
   const API ="https://gate-pass-system-drti.onrender.com" ;
-    // import.meta.env.VITE_API_URL || "http://localhost:5000/api/auth";
  const role = user.role;
   useEffect(() => {
     fetchHistory();
@@ -146,7 +146,11 @@ const StaffHistory = () => {
           </Table>
         </TableContainer>
       </Box>
-    
+      <PassDetails
+        open={open}
+        onClose={() => setOpen(false)}
+        pass={pass}
+      />
     </>
   );
 };

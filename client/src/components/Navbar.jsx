@@ -20,11 +20,11 @@ import ProfileMenu from "./ProfileMenu";
 import AddPass from "./AddPass";
 import HodPassCreate from "./HodPasssCreate";
 const API = "https://gate-pass-system-drti.onrender.com" ;
-const GRADIENT = "linear-gradient(90deg,#22c55e,#2563eb)";
+const GRADIENT = "linear-gradient(135deg,#2563eb,#22c55e)";
 
-/* =========================
-   INTERNAL STAT CARD
-========================= */
+
+  //  INTERNAL STAT CARD
+
 const StatBox = ({ title, value, icon }) => (
   <Grid item xs={12} sm={6} md={3}>
     <Card
@@ -67,228 +67,298 @@ const StatBox = ({ title, value, icon }) => (
   </Grid>
 );
 
+
+  //  NAVBAR
+
 const Navbar = ({
   role,
   setMobileOpen,
-  setOpenAddUser = () => {},   // ✅ safe default
+  setOpenAddUser = () => {},
   approvedCount = 0,
   users = [],
-  pendingPasses = [],
-
   API,
   token,
-  setPasses = () => {},       // ✅ safe default
+  setPasses = () => {},
 }) => {
   const [showPassModal, setShowPassModal] = useState(false);
 
-  /* =========================
-     ADMIN NAVBAR
-  ========================= */
-  if (role === "admin") {
-    return (
-      <Stack spacing={4} maxWidth="1600px" mx="auto">
-        <Card
-          sx={{
-            p: 4,
-            borderRadius: 5,
-            background: GRADIENT,
-            color: "#fff",
-          }}
+
+    //  ADMIN NAVBAR
+
+ if (role === "admin") {
+  return (
+    <Stack spacing={4} maxWidth="1400px" mx="auto" width="100%">
+      <Card
+        sx={{
+          p: { xs: 3, md: 4 },
+          borderRadius: 5,
+          background: GRADIENT,
+          color: "#fff",
+          width: "95%",
+        }}
+      >
+        <Stack
+          // Horizontal on laptop (row), Vertical on mobile (column)
+          direction={{ xs: "column", md: "row" }}
+          // Pushes items to opposite ends on laptop
+          justifyContent={{ xs: "center", md: "space-between" }}
+          alignItems="center"
+          spacing={2}
         >
-          <Grid container alignItems="center" spacing={2}>
-            <Grid item xs={12} md={8}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <IconButton
-                  onClick={() => setMobileOpen(true)}
-                  sx={{ display: { sm: "none" }, color: "#fff" }}
-                >
-                  <MenuIcon />
-                </IconButton>
-
-                <AdminPanelSettingsIcon fontSize="large" />
-                <Typography variant="h5" fontWeight={900}>
-                  ADMIN DASHBOARD
-                </Typography>
-              </Stack>
-              <Typography mt={1}>
-                Manage users and system approvals
+          {/* LEFT SIDE: Title & Icon */}
+          <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
+            <Stack 
+              direction="row" 
+              spacing={2} 
+              alignItems="center"
+              justifyContent={{ xs: "center", md: "flex-start" }}
+            >
+              <IconButton
+                onClick={() => setMobileOpen(true)}
+                sx={{ display: { xs: "inline-flex", sm: "none" }, color: "#fff", p: 0 }}
+              >
+                <MenuIcon />
+              </IconButton>
+              <AdminPanelSettingsIcon fontSize="large" />
+              <Typography variant="h5" fontWeight={900} sx={{ whiteSpace: 'nowrap' }}>
+                ADMIN DASHBOARD
               </Typography>
-            </Grid>
+            </Stack>
+            <Typography mt={1} sx={{ opacity: 0.9 }}>
+              Manage users and system approvals
+            </Typography>
+          </Box>
 
-            <Grid item xs={12} md={4}>
-              <Stack direction="row" justifyContent="flex-end" spacing={2}>
-                <Button
-                  startIcon={<PersonAddAltIcon />}
-                  onClick={() => setOpenAddUser(true)}
-                  sx={{
-                    bgcolor: "#fff",
-                    color: "#166534",
-                    fontWeight: 900,
-                    px: 4,
-                    borderRadius: 3,
-                  }}
-                >
-                  ADD USER
-                </Button>
-                <ProfileMenu />
-              </Stack>
-            </Grid>
-          </Grid>
-        </Card>
+          {/* RIGHT SIDE: Action Buttons */}
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="center"
+            sx={{ 
+              mt: { xs: 2, md: 0 },
+              width: { xs: "100%", md: "auto" } 
+            }}
+          >
+            <Button
+              startIcon={<PersonAddAltIcon />}
+              onClick={() => setOpenAddUser(true)}
+              sx={{
+                bgcolor: "#fff",
+                color: "#166534",
+                fontWeight: 900,
+                px: 4,
+                py: 1.2, // Added consistent padding
+                borderRadius: 3,
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#f0f0f0' }
+              }}
+            >
+              ADD USER
+            </Button>
+            <ProfileMenu />
+          </Stack>
+        </Stack>
+      </Card>
 
-        <Grid container spacing={4}>
-          <StatBox
-            title="Approved Passes"
-            value={approvedCount}
-            icon={<CheckCircleIcon fontSize="large" />}
-          />
-          <StatBox
-            title="Total Users"
-            value={users.length}
-            icon={<PeopleIcon fontSize="large" />}
-          />
-        </Grid>
-      </Stack>
-    );
-  }
-
-  /* =========================
-     STAFF NAVBAR
-  ========================= */
-  if (role === "staff") {
-    return (
-      <Stack spacing={4} maxWidth="1400px" mx="auto">
-        <Card
-          sx={{
-            p: { xs: 3, md: 4 },
-            borderRadius: 5,
-            background: GRADIENT,
-            color: "#fff",
-          }}
-        >
-          <Grid container alignItems="center" spacing={2}>
-            <Grid item xs={12} md={8}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <IconButton
-                  onClick={() => setMobileOpen(true)}
-                  sx={{ display: { sm: "none" }, color: "#fff" }}
-                >
-                  <MenuIcon />
-                </IconButton>
-
-                <Shield size={34} />
-                <Typography variant="h5" fontWeight={900}>
-                  STAFF GATE PASS
-                </Typography>
-              </Stack>
-              <Typography mt={1} sx={{ opacity: 0.9 }}>
-                Apply and track gate pass requests
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <Stack direction="row" justifyContent="flex-end" spacing={2}>
-                <Button
-                  startIcon={<Plus />}
-                  onClick={() => setShowPassModal(true)}
-                  sx={{
-                    bgcolor: "#fff",
-                    color: "#2563eb",
-                    px: 4,
-                    py: 1.4,
-                    fontWeight: 800,
-                    borderRadius: 3,
-                  }}
-                >
-                  APPLY PASS
-                </Button>
-                <ProfileMenu />
-              </Stack>
-            </Grid>
-          </Grid>
-        </Card>
-
-        {/* ✅ Modal outside Card */}
-        <AddPass
-          open={showPassModal}
-          onClose={() => setShowPassModal(false)}
-          API={API}
-          token={token}
-          setPasses={setPasses}
+      {/* Stats Section remains as Grid */}
+      <Grid container spacing={4}>
+        <StatBox
+          title="Approved Passes"
+          value={approvedCount}
+          icon={<CheckCircleIcon fontSize="large" />}
         />
-      </Stack>
-    );
-  }
+        <StatBox
+          title="Total Users"
+          value={users.length}
+          icon={<PeopleIcon fontSize="large" />}
+        />
+      </Grid>
+    </Stack>
+  );
+}
 
-  /* =========================
-     HOD NAVBAR
-  ========================= */
-  if (role === "hod") {
-    return (
-      <Stack spacing={4} maxWidth="1500px" mx="auto">
-        <Card
-          sx={{
-            p: { xs: 3, md: 4 },
-            borderRadius: 5,
-            background: GRADIENT,
-            color: "#fff",
-          }}
+    //  STAFF NAVBAR
+
+if (role === "staff") {
+  return (
+    <Stack spacing={2} maxWidth="1400px" mx="auto" width="100%">
+      <Card
+        sx={{
+          p: { xs: 3, md: 4 },
+          borderRadius: 5,
+          background: GRADIENT,
+          color: "#fff",
+          width: "95%", // Ensures card fills the stack
+        }}
+      >
+        <Stack
+          // Mobile: Vertical (column), Laptop: Horizontal (row)
+          direction={{ xs: "column", md: "row" }}
+          // Laptop: Pushes left and right apart
+          justifyContent={{ xs: "center", md: "space-between" }}
+          alignItems="center"
+          spacing={1}
         >
-          <Grid container alignItems="center" spacing={2}>
-            <Grid item xs={12} md={8}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <IconButton
-                  onClick={() => setMobileOpen(true)}
-                  sx={{ display: { sm: "none" }, color: "#fff" }}
-                >
-                  <MenuIcon />
-                </IconButton>
-
-                <ShieldCheck size={34} />
-                <Typography variant="h5" fontWeight={900}>
-                  HOD APPROVAL PANEL
-                </Typography>
-              </Stack>
-
-              <Typography mt={1} sx={{ opacity: 0.9 }}>
-                Review and approve staff gate pass requests
+          {/* LEFT SIDE: Title Group */}
+          <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
+            <Stack 
+              direction="row" 
+              spacing={2} 
+              alignItems="center" 
+              justifyContent={{ xs: "center", md: "flex-start" }}
+            >
+              <IconButton
+                onClick={() => setMobileOpen(true)}
+                sx={{ display: { xs: "inline-flex", sm: "none" }, color: "#fff", p: 0 }}
+              >
+                <MenuIcon />
+              </IconButton>
+              <Shield size={34} />
+              <Typography variant="h5" fontWeight={900} sx={{ whiteSpace: 'nowrap' }}>
+                STAFF GATE PASS
               </Typography>
-            </Grid>
-              <Button
-                  startIcon={<Plus />}
-                  onClick={() => setShowPassModal(true)}
-                  sx={{
-                    bgcolor: "#fff",
-                    color: "#2563eb",
-                    px: 4,
-                    py: 1.4,
-                    fontWeight: 800,
-                    borderRadius: 3,
-                  }}
-                >
-                  APPLY PASS
-                </Button>
+            </Stack>
+            <Typography mt={1} sx={{ opacity: 0.9 }}>
+              Apply and track gate pass requests
+            </Typography>
+          </Box>
 
-            <Grid item xs={12} md={4}>
-              <Stack direction="row" justifyContent="flex-end">
-                <ProfileMenu />
-              </Stack>
-            </Grid>
-          </Grid>
-        </Card>
-<HodPassCreate
-    open={showPassModal}
-          onClose={() => setShowPassModal(false)}
-          API={API}
-          token={token}
-          setPasses={setPasses}
-          />
-      
-      </Stack>
-    );
-  }
+          {/* RIGHT SIDE: Action Group */}
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="center"
+            sx={{ 
+              mt: { xs: 2, md: 0 },
+              width: { xs: "100%", md: "auto" } 
+            }}
+          >
+            <Button
+              startIcon={<Plus />}
+              onClick={() => setShowPassModal(true)}
+              sx={{
+                bgcolor: "#fff",
+                color: "#166534",
+                px: { xs: 3, md: 4 },
+                py: 1.4,
+                fontWeight: 800,
+                borderRadius: 3,
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#f0f0f0' }
+              }}
+            >
+              APPLY PASS
+            </Button>
+            <ProfileMenu />
+          </Stack>
+        </Stack>
+      </Card>
+
+      <AddPass
+        open={showPassModal}
+        onClose={() => setShowPassModal(false)}
+        API={API}
+        token={token}
+        setPasses={setPasses}
+      />
+    </Stack>
+  );
+}
+
+  
+    //  HOD NAVBAR
+ 
+if (role === "hod") {
+  return (
+    <Stack spacing={4} maxWidth="1400px" mx="auto" width="100%">
+      <Card
+        sx={{
+          p: { xs: 3, md: 4 },
+          borderRadius: 5,
+          background: GRADIENT,
+          color: "#fff",
+          width: "95%",
+        }}
+      >
+        <Stack
+          // Laptop: Horizontal (row), Mobile: Vertical (column)
+          direction={{ xs: "column", md: "row" }}
+          // Pushes left and right sections apart on laptop
+          justifyContent={{ xs: "center", md: "space-between" }}
+          alignItems="center"
+          spacing={2}
+        >
+          {/* LEFT SIDE: Title & Subtitle */}
+          <Box sx={{ textAlign: { xs: "center", md: "left" } }}>
+            <Stack 
+              direction="row" 
+              spacing={2} 
+              alignItems="center"
+              justifyContent={{ xs: "center", md: "flex-start" }}
+            >
+              <IconButton
+                onClick={() => setMobileOpen(true)}
+                sx={{ display: { xs: "inline-flex", sm: "none" }, color: "#fff", p: 0 }}
+              >
+                <MenuIcon />
+              </IconButton>
+              <ShieldCheck size={34} />
+              <Typography variant="h5" fontWeight={900} sx={{ whiteSpace: 'nowrap' }}>
+                HOD APPROVAL PANEL
+              </Typography>
+            </Stack>
+            <Typography mt={1} sx={{ opacity: 0.9 }}>
+              Review and approve staff gate pass requests
+            </Typography>
+          </Box>
+
+          {/* RIGHT SIDE: Action Buttons */}
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            justifyContent="center"
+            sx={{ 
+              mt: { xs: 2, md: 0 },
+              width: { xs: "100%", md: "auto" } 
+            }}
+          >
+            <Button
+              startIcon={<Plus />}
+              onClick={() => setShowPassModal(true)}
+              sx={{
+                bgcolor: "#fff",
+                color: "#166534",
+                px: 4,
+                py: 1.4,
+                fontWeight: 800,
+                borderRadius: 3,
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#f0f0f0' }
+              }}
+            >
+              APPLY PASS
+            </Button>
+            <ProfileMenu />
+          </Stack>
+        </Stack>
+      </Card>
+
+      <HodPassCreate
+        open={showPassModal}
+        onClose={() => setShowPassModal(false)}
+        API={API}
+        token={token}
+        setPasses={setPasses}
+      />
+    </Stack>
+  );
+}
 
   return null;
 };
 
 export default Navbar;
+

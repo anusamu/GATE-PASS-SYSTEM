@@ -12,9 +12,137 @@ const baseUrl = process.env.APP_URL || "http://localhost:5000";
 /* =====================================================
    STAFF CREATE PASS  (Assign to SINGLE HOD)
 ===================================================== */
+// exports.createPass = async (req, res) => {
+//   try {
+//     // 🔍 SAFETY CHECK (prevents crash)
+//     if (!req.body) {
+//       return res.status(400).json({
+//         message: "Form data not received. Multer middleware missing.",
+//       });
+//     }
+
+//     const {
+//       assetName,
+//       assetSerialNo,
+//       externalPersonName,
+//       externalPersonEmail,
+//       externalPersonPhone,
+//       passType,
+//       purpose,
+//       returnDateTime,
+//     } = req.body;
+
+//     // 🔒 REQUIRED FIELD VALIDATION
+//     if (
+//       !assetName ||
+//       !assetSerialNo ||
+//       !externalPersonName ||
+//       !externalPersonEmail ||
+//       !passType
+//     ) {
+//       return res.status(401).json({
+//         message: "Required fields are missing",
+//       });
+//     }
+
+//     // 1. Find the HOD belonging to the same department as the staff
+//     const hod = await User.findOne({
+//       department: req.user.department,
+//       role: "hod",
+//     });
+
+//     if (!hod) {
+//       return res
+//         .status(404)
+//         .json({ message: "No HOD found for your department" });
+//     }
+
+//     // 2. Create pass and link it to the found HOD's ID
+//     const pass = await Pass.create({
+//       requester: req.user._id,
+//       requesterName: req.user.name,
+//       requesterEmail: req.user.email,
+//       department: req.user.department,
+//       hod: hod._id,
+
+//       assetName,
+//       purpose,
+//       assetSerialNo,
+//       externalPersonName,
+//       externalPersonEmail,
+//       externalPersonPhone,
+
+//       passType,
+//       returnDateTime:
+//         passType === "RETURNABLE" ? returnDateTime : null,
+
+//       // Cloudinary image URL
+//       photo: req.file ? req.file.path : null,
+
+//       status: "PENDING",
+//     });
+
+//     await sendMail(
+//       hod.email,
+//     " New Gate Pass Request",
+//   `
+// <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
+//   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    
+//     <div style="background: linear-gradient(135deg, #048cedff 0%, #09f097ff 100%); padding: 30px; text-align: center;">
+//       <img src="https://technopark.in/tp-logo.png" alt="Technopark" style="width: 180px; filter: brightness(0) invert(1);">
+//     </div>
+
+//     <div style="padding: 40px 30px;">
+//       <h2 style="color: #333; margin-top: 0; font-size: 24px; font-weight: 800;">New Approval Request</h2>
+      
+//       <p style="color: #555; font-size: 16px;">Hello,</p>
+      
+//       <p style="color: #555; font-size: 16px;">
+//         A new gate pass request has been submitted by <strong>${req.user.name}</strong> for the following asset:
+//       </p>
+
+//       <div style="background-color: #f8fafb; border-radius: 8px; padding: 20px; border-left: 4px solid #007cf0; margin: 25px 0;">
+//         <p style="margin: 5px 0; font-size: 15px; color: #333;"><strong>Asset:</strong> ${pass.assetName}</p>
+//         <p style="margin: 5px 0; font-size: 15px; color: #333;"><strong>Serial No:</strong> ${pass.assetSerialNo}</p>
+//       </div>
+
+//       <p style="color: #555; font-size: 14px;">
+//         Please log in to the portal to review the details and provide your approval.
+//       </p>
+
+//       <div style="text-align: center; margin-top: 30px;">
+//         <a href="https://gate-pass-system-kappa.vercel.app/" 
+//            style="background: linear-gradient(135deg, #007cf0 0%, #00dfd8 100%); 
+//                   color: white; 
+//                   padding: 14px 32px; 
+//                   text-decoration: none; 
+//                   border-radius: 6px; 
+//                   font-weight: bold; 
+//                   display: inline-block;
+//                   box-shadow: 0 4px 10px rgba(0,124,240,0.3);">
+//             Login to Approve
+//         </a>
+//       </div>
+//     </div>
+    
+//     <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #999;">
+//       This is an automated notification from the Technopark Gate Pass System.
+//     </div>
+//   </div>
+// </div>
+// `
+//     );
+
+//     res.status(201).json(pass);
+//   } catch (error) {
+//     console.error("CREATE PASS ERROR:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 exports.createPass = async (req, res) => {
   try {
-    // 🔍 SAFETY CHECK (prevents crash)
+    // 🔍 SAFETY CHECK
     if (!req.body) {
       return res.status(400).json({
         message: "Form data not received. Multer middleware missing.",
@@ -45,7 +173,7 @@ exports.createPass = async (req, res) => {
       });
     }
 
-    // 1. Find the HOD belonging to the same department as the staff
+    // 1️⃣ Find HOD of same department
     const hod = await User.findOne({
       department: req.user.department,
       role: "hod",
@@ -57,7 +185,7 @@ exports.createPass = async (req, res) => {
         .json({ message: "No HOD found for your department" });
     }
 
-    // 2. Create pass and link it to the found HOD's ID
+    // 2️⃣ Create Pass
     const pass = await Pass.create({
       requester: req.user._id,
       requesterName: req.user.name,
@@ -76,19 +204,74 @@ exports.createPass = async (req, res) => {
       returnDateTime:
         passType === "RETURNABLE" ? returnDateTime : null,
 
-      // Cloudinary image URL
+      // 📷 Cloudinary image
       photo: req.file ? req.file.path : null,
 
       status: "PENDING",
     });
 
-    await sendMail(
-      hod.email,
-      "New Request",
-      `<p>Request from ${req.user.name}</p>`
-    );
-
+    // ✅ RESPOND TO USER IMMEDIATELY (FAST)
     res.status(201).json(pass);
+
+    // 3️⃣ SEND EMAIL IN BACKGROUND (NON-BLOCKING)
+    sendMail(
+      hod.email,
+      "New Gate Pass Request",
+      `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    
+    <div style="background: linear-gradient(135deg, #048cedff 0%, #09f097ff 100%); padding: 30px; text-align: center;">
+      <img 
+  src="https://gate-pass-system-kappa.vercel.app/tp-logo.png"
+  alt="Technopark"
+  style="width:180px; filter:brightness(0) invert(1);"
+/>
+    </div>
+
+    <div style="padding: 40px 30px;">
+      <h2 style="color: #333; margin-top: 0; font-size: 24px; font-weight: 800;">New Approval Request</h2>
+      
+      <p style="color: #555; font-size: 16px;">Hello,</p>
+      
+      <p style="color: #555; font-size: 16px;">
+        A new gate pass request has been submitted by <strong>${req.user.name}</strong> for the following asset:
+      </p>
+
+      <div style="background-color: #f8fafb; border-radius: 8px; padding: 20px; border-left: 4px solid #007cf0; margin: 25px 0;">
+        <p style="margin: 5px 0; font-size: 15px; color: #333;"><strong>Asset:</strong> ${pass.assetName}</p>
+        <p style="margin: 5px 0; font-size: 15px; color: #333;"><strong>Serial No:</strong> ${pass.assetSerialNo}</p>
+      </div>
+
+      <p style="color: #555; font-size: 14px;">
+        Please log in to the portal to review the details and provide your approval.
+      </p>
+
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="https://gate-pass-system-kappa.vercel.app/" 
+           style="background: linear-gradient(135deg, #007cf0 0%, #00dfd8 100%); 
+                  color: white; 
+                  padding: 14px 32px; 
+                  text-decoration: none; 
+                  border-radius: 6px; 
+                  font-weight: bold; 
+                  display: inline-block;
+                  box-shadow: 0 4px 10px rgba(0,124,240,0.3);">
+            Login to Approve
+        </a>
+      </div>
+    </div>
+    
+    <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #999;">
+      This is an automated notification from the Technopark Gate Pass System.
+    </div>
+  </div>
+</div>
+`
+    ).catch((err) => {
+      console.error("📧 Email send failed:", err);
+    });
+
   } catch (error) {
     console.error("CREATE PASS ERROR:", error);
     res.status(500).json({ message: "Server error" });
@@ -171,7 +354,11 @@ if (recipients.length > 0) {
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     
     <div style="background: linear-gradient(135deg, #048cedff 0%, #09f097ff 100%); padding: 30px; text-align: center;">
-      <img src="https://technopark.in/tp-logo.png" alt="Technopark" style="width: 180px; filter: brightness(0) invert(1);">
+      <img 
+  src="https://gate-pass-system-kappa.vercel.app/tp-logo.png"
+  alt="Technopark"
+  style="width:180px; filter:brightness(0) invert(1);"
+/>
     </div>
 
     <div style="padding: 40px 30px;">
@@ -262,9 +449,11 @@ exports.rejectPass = async (req, res) => {
     
     <!-- HEADER -->
     <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px; text-align: center;">
-      <img src="https://your-domain.com/technopark-logo.png" 
-           alt="Technopark" 
-           style="width: 180px; filter: brightness(0) invert(1);">
+      <img 
+  src="https://gate-pass-system-kappa.vercel.app/tp-logo.png"
+  alt="Technopark"
+  style="width:180px; filter:brightness(0) invert(1);"
+/>
     </div>
 
     <!-- BODY -->
@@ -428,17 +617,64 @@ exports.createPassHod = async (req, res) => {
     // Send mail to external person
     await sendMail(
       pass.externalPersonEmail,
-      "Gate Pass Approved",
-      `
-        <p>Hello ${pass.externalPersonName},</p>
-        <p>Your gate pass has been <b>APPROVED</b>.</p>
-        <p>
-          <a href="${process.env.BACKEND_URL}/api/auth/pass/view/${pass._id}">
+     "Gate Pass Approved",
+  `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    
+    <div style="background: linear-gradient(135deg, #048cedff 0%, #09f097ff 100%); padding: 30px; text-align: center;">
+        <img 
+  src="https://gate-pass-system-kappa.vercel.app/tp-logo.png"
+  alt="Technopark"
+  style="width:180px; filter:brightness(0) invert(1);"
+/>
+    </div>
+
+    <div style="padding: 40px 30px;">
+      <h2 style="color: #333; margin-top: 0; font-size: 24px; font-weight: 800;">Gate Pass Approved</h2>
+      
+      <p style="color: #555; font-size: 16px;">Hello <strong>${pass.externalPersonName}</strong>,</p>
+      
+      <p style="color: #555; font-size: 16px;">
+        Your gate pass request has been <span style="color: #09f097ff; font-weight: bold;">APPROVED</span>. 
+        You are now authorized for entry/exit regarding the following asset:
+      </p>
+
+      <div style="background-color: #f8fafb; border-radius: 8px; padding: 20px; border-left: 4px solid #09f097ff; margin: 25px 0;">
+        <p style="margin: 5px 0; font-size: 15px; color: #333;"><strong>Asset:</strong> ${pass.assetName}</p>
+        <p style="margin: 5px 0; font-size: 15px; color: #333;"><strong>Serial No:</strong> ${pass.assetSerialNo}</p>
+      </div>
+
+      <p style="color: #666; font-size: 14px;">
+        Please click the button below to view your digital pass. You may be required to show this at the security gate.
+      </p>
+
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="${process.env.BACKEND_URL}/api/auth/pass/view/${pass._id}" 
+           style="background: linear-gradient(135deg, #007cf0 0%, #00dfd8 100%); 
+                  color: white; 
+                  padding: 14px 32px; 
+                  text-decoration: none; 
+                  border-radius: 6px; 
+                  font-weight: bold; 
+                  display: inline-block;
+                  box-shadow: 0 4px 10px rgba(0,124,240,0.3);">
             View & Download Gate Pass
-          </a>
-        </p>
-        <p>Regards,<br/>Security Team</p>
-      `,
+        </a>
+      </div>
+
+      <p style="margin-top: 40px; color: #888; font-size: 14px;">
+        Regards,<br/>
+        <strong style="color: #333;">Security Team</strong>
+      </p>
+    </div>
+    
+    <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #999;">
+      This is an automated message. Please do not reply to this email.
+    </div>
+  </div>
+</div>
+`,
       [
         {
           filename: "GatePass.pdf",
@@ -457,66 +693,66 @@ exports.createPassHod = async (req, res) => {
 /* =====================================================
    HOD APPROVE PASS (REQUEST FLOW)
 ===================================================== */
-exports.hodapprovePass = async (req, res) => {
-  try {
-    const { id } = req.params;
+// exports.hodapprovePass = async (req, res) => {
+//   try {
+//     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid Pass ID format" });
-    }
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: "Invalid Pass ID format" });
+//     }
 
-    const pass = await Pass.findById(id);
-    if (!pass) {
-      return res.status(404).json({ message: "Pass not found" });
-    }
+//     const pass = await Pass.findById(id);
+//     if (!pass) {
+//       return res.status(404).json({ message: "Pass not found" });
+//     }
 
-    if (pass.hod.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized" });
-    }
+//     if (pass.hod.toString() !== req.user._id.toString()) {
+//       return res.status(403).json({ message: "Not authorized" });
+//     }
 
-    if (pass.status !== "PENDING") {
-      return res.status(400).json({ message: `Already ${pass.status}` });
-    }
+//     if (pass.status !== "PENDING") {
+//       return res.status(400).json({ message: `Already ${pass.status}` });
+//     }
 
-    pass.status = "APPROVED";
-    pass.approvedAt = new Date();
-    await pass.save();
+//     pass.status = "APPROVED";
+//     pass.approvedAt = new Date();
+//     await pass.save();
 
-    const pdfPath = await generatePassPDF(pass);
+//     const pdfPath = await generatePassPDF(pass);
 
-    const recipients = [
-      pass.requesterEmail,
-      pass.externalPersonEmail,
-    ].filter(Boolean);
+//     const recipients = [
+//       pass.requesterEmail,
+//       pass.externalPersonEmail,
+//     ].filter(Boolean);
 
-    if (recipients.length > 0) {
-      await sendMail(
-        recipients,
-        "Gate Pass Approved",
-        `
-          <p>Hello,</p>
-          <p>Your gate pass has been <b>APPROVED</b>.</p>
-          <p>
-            <a href="${process.env.BACKEND_URL}/api/auth/pass/view/${pass._id}">
-              View & Download Gate Pass
-            </a>
-          </p>
-        `,
-        [
-          {
-            filename: "GatePass.pdf",
-            path: pdfPath,
-          },
-        ]
-      );
-    }
+//     if (recipients.length > 0) {
+//       await sendMail(
+//         recipients,
+//         "Gate Pass Approved",
+//         `
+//           <p>Hello,</p>
+//           <p>Your gate pass has been <b>APPROVED</b>.</p>
+//           <p>
+//             <a href="${process.env.BACKEND_URL}/api/auth/pass/view/${pass._id}">
+//               View & Download Gate Pass
+//             </a>
+//           </p>
+//         `,
+//         [
+//           {
+//             filename: "GatePass.pdf",
+//             path: pdfPath,
+//           },
+//         ]
+//       );
+//     }
 
-    res.json({ message: "Gate pass approved", pass });
-  } catch (error) {
-    console.error("APPROVE PASS ERROR:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+//     res.json({ message: "Gate pass approved", pass });
+//   } catch (error) {
+//     console.error("APPROVE PASS ERROR:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 
 /* =====================================================
    DOWNLOAD PASS PDF
