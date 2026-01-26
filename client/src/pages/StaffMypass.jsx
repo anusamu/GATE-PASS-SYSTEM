@@ -14,24 +14,27 @@ import {
 } from "@mui/material";
 import Sidebar from "../components/SideBar";
 import Navbar from "../components/Navbar";
-const API = "https://gate-pass-system-drti.onrender.com" ;
+import PassDetails from "../components/PassDetailsDialog";
+
+const API = "https://gate-pass-system-drti.onrender.com";
 
 const MyPass = () => {
- 
-    //  SIDEBAR STATE
-
+  // SIDEBAR STATE
   const [showPassModal, setShowPassModal] = useState(false);
   const [activeTab, setActiveTab] = useState("my-passes");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  
+
   const user = { role: localStorage.getItem("role") };
+  const role = user.role;
 
-const [open, setOpen] = useState(false);//pass Deatils
-    //  PASSES STATE
+  // PASS DETAILS DIALOG
+  const [open, setOpen] = useState(false);
+  const [selectedPass, setSelectedPass] = useState(null);
 
+  // PASSES STATE
   const [passes, setPasses] = useState([]);
- const role = user.role;
+
   useEffect(() => {
     fetchPasses();
   }, []);
@@ -44,7 +47,6 @@ const [open, setOpen] = useState(false);//pass Deatils
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // ✅ Only APPROVED passes
       const approved = res.data.filter(
         (pass) => pass.status === "APPROVED"
       );
@@ -55,12 +57,13 @@ const [open, setOpen] = useState(false);//pass Deatils
     }
   };
 
+  const handleRowClick = (pass) => {
+    setSelectedPass(pass);
+    setOpen(true);
+  };
+
   return (
-     <>
-    <Box
-   
-    >
-      {/* SIDEBAR */}
+    <>
       <Sidebar
         user={user}
         activeTab={activeTab}
@@ -70,7 +73,8 @@ const [open, setOpen] = useState(false);//pass Deatils
         collapsed={collapsed}
         setCollapsed={setCollapsed}
       />
-<Box
+
+      <Box
         component="main"
         sx={{
           ml: { sm: collapsed ? "72px" : "260px" },
@@ -80,14 +84,12 @@ const [open, setOpen] = useState(false);//pass Deatils
           p: 3,
         }}
       >
-        {/* NAVBAR */}
         <Navbar
           role={role}
           setMobileOpen={setMobileOpen}
           setShowPassModal={setShowPassModal}
         />
-      {/* PAGE CONTENT */}
-      <Box p={3}>
+
         <Typography variant="h6" fontWeight={800} mb={2}>
           My Approved Passes
         </Typography>
@@ -99,9 +101,9 @@ const [open, setOpen] = useState(false);//pass Deatils
                 <TableCell><b>Pass Type</b></TableCell>
                 <TableCell><b>Asset Name</b></TableCell>
                 <TableCell><b>Asset No</b></TableCell>
-                  <TableCell><b>External Person</b></TableCell>
-                    <TableCell><b>Email</b></TableCell>
-                     <TableCell><b>Phone</b></TableCell>
+                <TableCell><b>External Person</b></TableCell>
+                <TableCell><b>Email</b></TableCell>
+                <TableCell><b>Phone</b></TableCell>
                 <TableCell><b>Approved By</b></TableCell>
                 <TableCell><b>Status</b></TableCell>
                 <TableCell><b>Date</b></TableCell>
@@ -111,27 +113,27 @@ const [open, setOpen] = useState(false);//pass Deatils
             <TableBody>
               {passes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={9} align="center">
                     No approved passes found
                   </TableCell>
                 </TableRow>
               ) : (
                 passes.map((pass) => (
-                  <TableRow key={pass._id}>
+                  <TableRow
+                    key={pass._id}
+                    hover
+                    sx={{ cursor: "pointer" }}
+                    onClick={() => handleRowClick(pass)}
+                  >
                     <TableCell>{pass.passType}</TableCell>
                     <TableCell>{pass.assetName}</TableCell>
                     <TableCell>{pass.assetSerialNo}</TableCell>
-                     <TableCell>{pass.externalPersonName}</TableCell>
+                    <TableCell>{pass.externalPersonName}</TableCell>
                     <TableCell>{pass.externalPersonEmail}</TableCell>
                     <TableCell>{pass.externalPersonPhone}</TableCell>
                     <TableCell>{pass.hod?.name || "-"}</TableCell>
-
                     <TableCell>
-                      <Chip
-                        label="APPROVED"
-                        color="success"
-                        size="small"
-                      />
+                      <Chip label="APPROVED" color="success" size="small" />
                     </TableCell>
                     <TableCell>
                       {new Date(pass.createdAt).toLocaleDateString()}
@@ -143,14 +145,13 @@ const [open, setOpen] = useState(false);//pass Deatils
           </Table>
         </TableContainer>
       </Box>
-    </Box>
-    </Box>
+
       <PassDetails
-            open={open}
-            onClose={() => setOpen(false)}
-            pass={pass}
-          />
-         </>
+        open={open}
+        onClose={() => setOpen(false)}
+        pass={selectedPass}
+      />
+    </>
   );
 };
 

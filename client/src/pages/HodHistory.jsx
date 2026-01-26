@@ -15,9 +15,15 @@ import {
 } from "@mui/material";
 import Sidebar from "../components/SideBar";
 import Navbar from "../components/Navbar";
+import PassDetails from "../components/PassDetailsDialog";
+
 const HodHistory = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // ✅ Dialog states
+  const [open, setOpen] = useState(false);
+  const [selectedPass, setSelectedPass] = useState(null);
 
   // Sidebar states
   const [activeTab, setActiveTab] = useState("history");
@@ -35,11 +41,11 @@ const HodHistory = () => {
 
   const token = localStorage.getItem("token");
 
-const API = "https://gate-pass-system-drti.onrender.com" ;
+  const API = "https://gate-pass-system-drti.onrender.com";
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [token]);
 
   const fetchHistory = async () => {
     try {
@@ -60,7 +66,12 @@ const API = "https://gate-pass-system-drti.onrender.com" ;
   const getStatusColor = (status) => {
     if (status === "APPROVED") return "success";
     if (status === "REJECTED") return "error";
-    return "warning"; // PENDING
+    return "warning";
+  };
+
+  const handleRowClick = (pass) => {
+    setSelectedPass(pass);
+    setOpen(true);
   };
 
   if (loading) {
@@ -74,7 +85,7 @@ const API = "https://gate-pass-system-drti.onrender.com" ;
   return (
     <>
       <Sidebar
-        user={user}                 // ✅ always has role
+        user={user}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         mobileOpen={mobileOpen}
@@ -83,7 +94,7 @@ const API = "https://gate-pass-system-drti.onrender.com" ;
         setCollapsed={setCollapsed}
       />
 
-    <Box
+      <Box
         component="main"
         sx={{
           ml: { sm: collapsed ? "72px" : "260px" },
@@ -93,8 +104,8 @@ const API = "https://gate-pass-system-drti.onrender.com" ;
           p: { xs: 2, md: 3 },
         }}
       >
-        {/* NAVBAR (REPLACED HEADER) */}
         <Navbar role="hod" setMobileOpen={setMobileOpen} />
+
         <Typography variant="h6" mb={2}>
           HOD Pass History
         </Typography>
@@ -120,7 +131,12 @@ const API = "https://gate-pass-system-drti.onrender.com" ;
                 </TableRow>
               ) : (
                 history.map((pass) => (
-                  <TableRow key={pass._id}>
+                  <TableRow
+                    key={pass._id}
+                    hover
+                    sx={{ cursor: "pointer" }}
+                    onClick={() => handleRowClick(pass)}
+                  >
                     <TableCell>{pass._id.slice(-6)}</TableCell>
                     <TableCell>{pass.requester?.name || "-"}</TableCell>
                     <TableCell>{pass.purpose || "-"}</TableCell>
@@ -141,7 +157,13 @@ const API = "https://gate-pass-system-drti.onrender.com" ;
           </Table>
         </TableContainer>
       </Box>
-      
+
+      {/* ✅ Pass Details Dialog */}
+      <PassDetails
+        open={open}
+        onClose={() => setOpen(false)}
+        pass={selectedPass}
+      />
     </>
   );
 };

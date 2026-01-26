@@ -127,16 +127,17 @@ const Sidebar = ({
           justifyContent: "space-between",
           alignItems: "center",
           background: GRADIENT,
-          borderBottomLeftRadius: 20,
-          borderBottomRightRadius: 20,
+          borderRadius:5
+          // borderBottomLeftRadius: 20,
+          // borderBottomRightRadius: 20,
         }}
       >
     {!collapsed && (
   <Stack spacing={0} alignItems="flex-start">
-    <Typography fontWeight={900} color="#fff" fontSize={18}>
+    <Typography fontWeight={1000} color="#fff" fontSize={20}>
       Technopark
     </Typography>
-    <Typography fontWeight={600} color="#fff" fontSize={14}>
+    <Typography fontWeight={800} color="#fff" fontSize={16}>
       Gate Pass System
     </Typography>
   </Stack>
@@ -216,14 +217,14 @@ const Sidebar = ({
       <Divider sx={{ mt: "auto" }} />
 
       {!collapsed && (
-        <Box p={2}>
+        <Box p={4}>
           <Box
   component="img"
   src="/tp-logo.png"
   alt="Technopark"
   sx={{
     height: 28,
-    width: "auto",
+    width: 200,
   }}
 />
         </Box>

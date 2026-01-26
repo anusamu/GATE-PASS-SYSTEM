@@ -15,31 +15,33 @@ import {
 } from "@mui/material";
 import Sidebar from "../components/SideBar";
 import Navbar from "../components/Navbar";
+import PassDetails from "../components/PassDetailsDialog";
 
-const StaffHistory = ({pass}) => {
-   
-
+const StaffHistory = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [open, setOpen] = useState(false);
+  const [selectedPass, setSelectedPass] = useState(null);
+
   const [showPassModal, setShowPassModal] = useState(false);
   const [activeTab, setActiveTab] = useState("history");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [open, setOpen] = useState(false);
 
-  // ✅ FORCE USER ROLE (IMPORTANT)
+  // ✅ FORCE USER ROLE
   const storedUser = localStorage.getItem("user");
   const parsedUser = storedUser ? JSON.parse(storedUser) : {};
 
   const user = {
     ...parsedUser,
-    role: parsedUser?.role || "staff", // ✅ FORCE STAFF ROLE
+    role: parsedUser?.role || "staff",
   };
 
   const token = localStorage.getItem("token");
+  const API = "https://gate-pass-system-drti.onrender.com";
+  const role = user.role;
 
-  const API ="https://gate-pass-system-drti.onrender.com" ;
- const role = user.role;
   useEffect(() => {
     fetchHistory();
   }, []);
@@ -65,6 +67,11 @@ const StaffHistory = ({pass}) => {
     return "warning";
   };
 
+  const handleRowClick = (pass) => {
+    setSelectedPass(pass);
+    setOpen(true);
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
@@ -76,7 +83,7 @@ const StaffHistory = ({pass}) => {
   return (
     <>
       <Sidebar
-        user={user}               // ✅ ALWAYS HAS ROLE
+        user={user}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         mobileOpen={mobileOpen}
@@ -85,8 +92,7 @@ const StaffHistory = ({pass}) => {
         setCollapsed={setCollapsed}
       />
 
- 
-        <Box
+      <Box
         component="main"
         sx={{
           ml: { sm: collapsed ? "72px" : "260px" },
@@ -96,12 +102,12 @@ const StaffHistory = ({pass}) => {
           p: 3,
         }}
       >
-        {/* NAVBAR */}
         <Navbar
           role={role}
           setMobileOpen={setMobileOpen}
           setShowPassModal={setShowPassModal}
         />
+
         <Typography variant="h6" mb={2}>
           Staff Pass History
         </Typography>
@@ -126,7 +132,12 @@ const StaffHistory = ({pass}) => {
                 </TableRow>
               ) : (
                 history.map((pass) => (
-                  <TableRow key={pass._id}>
+                  <TableRow
+                    key={pass._id}
+                    hover
+                    sx={{ cursor: "pointer" }}
+                    onClick={() => handleRowClick(pass)}
+                  >
                     <TableCell>{pass._id.slice(-6)}</TableCell>
                     <TableCell>{pass.purpose || "-"}</TableCell>
                     <TableCell>
@@ -146,10 +157,11 @@ const StaffHistory = ({pass}) => {
           </Table>
         </TableContainer>
       </Box>
+
       <PassDetails
         open={open}
         onClose={() => setOpen(false)}
-        pass={pass}
+        pass={selectedPass}
       />
     </>
   );
