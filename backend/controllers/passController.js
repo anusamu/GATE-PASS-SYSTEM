@@ -253,7 +253,17 @@ exports.approvePass = async (req, res) => {
   }
 };
 
-
+exports.getRecentPasses = async (req, res) => {
+  try {
+    const passes = await Pass.find({ requester: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(4);
+    res.json(passes);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+// 
 
 /* =====================================================
    HOD REJECT PASS
@@ -453,7 +463,7 @@ exports.createPassHod = async (req, res) => {
       </p>
 
       <div style="text-align: center; margin-top: 30px;">
-        <a href="${process.env.BACKEND_URL}/api/auth/pass/view/${pass._id}" 
+        <a href="${process.env.BACKEND_URL}/pass/view/${pass._id}" 
            style="background: linear-gradient(135deg, #007cf0 0%, #00dfd8 100%); 
                   color: white; 
                   padding: 14px 32px; 

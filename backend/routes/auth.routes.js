@@ -17,17 +17,15 @@ const {
   approvePass,
   rejectPass,
   getRecentPasses,
-  getHistory ,
+  getHistory,
   createPassHod,
   downloadPass,
-  hodapprovePass// 1. Added this here
 } = require("../controllers/passController");
 
 // Import Middleware
-const { protect } = require("../middleware/authMiddleware"); 
+const { protect } = require("../middleware/authMiddleware");
 const { authorize } = require("../middleware/roleMiddleware");
 const upload = require("../middleware/upload");
-
 
 const {
   getUsers,
@@ -35,6 +33,7 @@ const {
   approvedPassCount,
   deleteUser,
 } = require("../controllers/adminController");
+
 // --- Auth Routes ---
 router.post("/login", login);
 router.post("/register", staffRegister);
@@ -50,45 +49,37 @@ router.post(
 
 // --- Pass Management Routes ---
 
-// Staff: Create, view all, and view recent passes
-router.post("/staff/create", protect,upload.single("photo"), authorize("staff"), createPass);
+// Staff
+router.post(
+  "/staff/create",
+  protect,
+  upload.single("photo"),
+  authorize("staff"),
+  createPass
+);
 router.get("/staff/mypass", protect, authorize("staff"), myPasses);
-router.get("/staff/recent", protect, authorize("staff"), getRecentPasses); // 2. Fixed naming and added role check
+router.get("/staff/recent", protect, authorize("staff"), getRecentPasses);
 
-// HOD: View pending
+// HOD
 router.get("/hod/pending", protect, authorize("hod"), pendingApprovals);
-
-// HOD: Approve and Reject
 router.put("/hod/approve/:id", protect, authorize("hod"), approvePass);
 router.put("/hod/reject/:id", protect, authorize("hod"), rejectPass);
 router.post(
   "/hod/create",
   protect,
   upload.single("photo"),
+  authorize("hod"),
   createPassHod
 );
 
-/* =========================
-   HOD APPROVE PASS
-========================= */
-// router.put("/hod/approve/:id", protect, hodapprovePass);
-
-/* =========================
-   DOWNLOAD PASS PDF
-========================= */
+// Pass View & Download
 router.get("/pass/download/:id", downloadPass);
-
-/* =========================
-   VIEW PASS (HTML PAGE)
-========================= */
 router.get("/pass/view/:id", viewPass);
 
-/* =========================
-   PASS HISTORY
-========================= */
+// History
 router.get("/history", protect, getHistory);
-// Admin dashboard
 
+// Admin dashboard
 router.get("/users", protect, getUsers);
 router.post("/create-user", protect, createUser);
 router.get("/passes/approved/count", protect, approvedPassCount);
