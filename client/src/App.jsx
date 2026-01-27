@@ -37,16 +37,8 @@ function App() {
           }
         />
 
-        {/* <Route
-          path="/history"
-          element={
-            <PrivateRoute>
-              <StaffHistory />
-            </PrivateRoute>
-          }
-        /> */}
 
-<Route path="/dashboard/history" element={<StaffHistory />} />
+{/* <Route path="/dashboard/history" element={<StaffHistory />} /> */}
 <Route path="/hod/history" element={<HodHistory/>} />
 
 

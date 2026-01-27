@@ -135,10 +135,10 @@ const Sidebar = ({
     {!collapsed && (
   <Stack spacing={0} alignItems="flex-start">
     <Typography fontWeight={1000} color="#fff" fontSize={19}>
-      Technopark
+      TECHNOPARK
     </Typography>
-    <Typography fontWeight={800} color="#fff" fontSize={16}>
-      Gate Pass System
+    <Typography fontWeight={600} color="#fff" fontSize={16}>
+      GATE PASS SYSTEM
     </Typography>
   </Stack>
 )}

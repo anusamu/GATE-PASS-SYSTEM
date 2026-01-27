@@ -61,11 +61,14 @@ const AddUserDialog = ({
               onChange={handleChange}
               fullWidth
             >
-              <MenuItem value="IT">IT</MenuItem>
-              <MenuItem value="HR">HR</MenuItem>
-              <MenuItem value="Finance">Finance</MenuItem>
-              <MenuItem value="Operations">Operations</MenuItem>
-              <MenuItem value="Security">Security</MenuItem>
+                  <MenuItem value="IT">IT</MenuItem>
+                                  <MenuItem value="HR">ADMIN</MenuItem>
+                                  <MenuItem value="Admin">FINANCE</MenuItem>
+                                  <MenuItem value="Security">CRM</MenuItem>
+                                   <MenuItem value="Security">LEGAL</MenuItem>
+                                   <MenuItem value="Security">ELECTRICAL</MenuItem>
+                                   <MenuItem value="Security">MEP</MenuItem>
+                                   <MenuItem value="Security">CIVIL</MenuItem>
             </TextField>
           )}
 
