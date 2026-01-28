@@ -47,42 +47,51 @@ function AuthPage() {
 
   // ================= LOGIN =================
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setMessage(null);
+  e.preventDefault();
+  setError(null);
+  setMessage(null);
 
-    try {
-      const res = await axios.post(`${API}/login`, loginData);
-      const { token, role, name, department,email } = res.data;
+  try {
+    const res = await axios.post(`${API}/login`, loginData);
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      localStorage.setItem("name", name);
-      localStorage.setItem("email", email);
-      if (department) localStorage.setItem("department", department);
+    const { token, role, name, department, email } = res.data;
 
-      setMessage("Login successful");
+    // ✅ SINGLE SOURCE OF TRUTH
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        name,
+        email,
+        department,
+        role: role.toLowerCase(),
+      })
+    );
 
-      switch (role) {
-        case "admin":
-          navigate("/admin/dashboard");
-          break;
-        case "hod":
-          navigate("/hod/dashboard");
-          break;
-        case "security":
-           navigate("/security/dashboard");
-          break;
-        case "staff":
-          navigate("/dashboard");
-          break;
-        default:
-          navigate("/login");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Invalid email or password");
+    localStorage.setItem("token", token);
+
+    setMessage("Login successful");
+
+    // ✅ REDIRECT BY ROLE
+    switch (role.toLowerCase()) {
+      case "admin":
+        navigate("/admin");
+        break;
+      case "hod":
+        navigate("/hod");
+        break;
+      case "security":
+        navigate("/security");
+        break;
+      case "staff":
+        navigate("/dashboard");
+        break;
+      default:
+        navigate("/");
     }
-  };
+  } catch (err) {
+    setError(err.response?.data?.message || "Invalid email or password");
+  }
+};
 
   // ================= SIGNUP =================
   const handleSignup = async (e) => {

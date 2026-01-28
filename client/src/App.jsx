@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import AuthPage from "./pages/Login";
-
 import DashboardLayout from "./routes/DashboardLayout";
 
 import DashBoard from "./pages/DashBoard";
@@ -13,23 +12,22 @@ import HodHistory from "./pages/HodHistory";
 
 import AdminDashboard from "./pages/AdminDashboard";
 
-import PrivateRoute from "./routes/PrivateRoute";
 import RoleRoute from "./routes/RoleRoute";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ================= PUBLIC ROUTE ================= */}
+        {/* ================= PUBLIC ================= */}
         <Route path="/" element={<AuthPage />} />
 
-        {/* ================= STAFF ROUTES ================= */}
+        {/* ================= STAFF ================= */}
         <Route
           path="/dashboard"
           element={
-            <PrivateRoute>
+            <RoleRoute role="staff">
               <DashboardLayout />
-            </PrivateRoute>
+            </RoleRoute>
           }
         >
           <Route index element={<DashBoard />} />
@@ -37,7 +35,7 @@ function App() {
           <Route path="history" element={<StaffHistory />} />
         </Route>
 
-        {/* ================= HOD ROUTES ================= */}
+        {/* ================= HOD ================= */}
         <Route
           path="/hod"
           element={
@@ -46,19 +44,21 @@ function App() {
             </RoleRoute>
           }
         >
-          <Route path="dashboard" element={<HodDashboard />} />
+          <Route index element={<HodDashboard />} />
           <Route path="history" element={<HodHistory />} />
         </Route>
 
-        {/* ================= ADMIN ROUTES ================= */}
+        {/* ================= ADMIN ================= */}
         <Route
-          path="/admin/dashboard"
+          path="/admin"
           element={
             <RoleRoute role="admin">
-              <AdminDashboard />
+              <DashboardLayout />
             </RoleRoute>
           }
-        />
+        >
+          <Route index element={<AdminDashboard />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

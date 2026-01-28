@@ -20,12 +20,23 @@ import {
 const ProfileMenu = () => {
   const [anchorEl, setAnchorEl] = useState(null);
 
-  const name = localStorage.getItem("name") || "User";
-  const email = localStorage.getItem("email") || "user@example.com";
-  const role = localStorage.getItem("role") || "Employee";
-  const department = localStorage.getItem("department") || "Operations";
-  const photo = localStorage.getItem("photo") || "";
+const storedUser = localStorage.getItem("user");
 
+const user = storedUser
+  ? JSON.parse(storedUser)
+  : {
+      name: "User",
+      email: "user@example.com",
+      role: "employee",
+      department: "Operations",
+      photo: "",
+    };
+
+const name = user.name || "User";
+const email = user.email || "user@example.com";
+const role = user.role || "employee";
+const department = user.department || "Operations";
+const photo = user.photo || "";
   // Gradient Theme Colors
   const mainGradient = "linear-gradient(135deg,#2563eb,#22c55e)";
 

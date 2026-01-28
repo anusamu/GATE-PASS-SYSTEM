@@ -49,7 +49,7 @@ const Sidebar = ({
      SAFE ROLE
   ========================= */
   const role = String(user?.role || "").toLowerCase();
-
+// 
   /* =========================
      ROLE BASED MENU (UI SAME)
   ========================= */
@@ -81,9 +81,9 @@ const Sidebar = ({
       role === "staff"
         ? "/dashboard"
         : role === "hod"
-        ? "/hod/dashboard"
+        ? "/hod/"
         : role === "admin"
-        ? "/admin/dashboard"
+        ? "/admin/"
         : "/security/dashboard",
 
     "my-passes": "/dashboard/mypass",

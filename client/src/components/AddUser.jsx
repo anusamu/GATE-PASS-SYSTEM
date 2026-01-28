@@ -62,13 +62,13 @@ const AddUserDialog = ({
               fullWidth
             >
                   <MenuItem value="IT">IT</MenuItem>
-                                  <MenuItem value="HR">ADMIN</MenuItem>
-                                  <MenuItem value="Admin">FINANCE</MenuItem>
-                                  <MenuItem value="Security">CRM</MenuItem>
-                                   <MenuItem value="Security">LEGAL</MenuItem>
-                                   <MenuItem value="Security">ELECTRICAL</MenuItem>
-                                   <MenuItem value="Security">MEP</MenuItem>
-                                   <MenuItem value="Security">CIVIL</MenuItem>
+                                  <MenuItem value="Admin">ADMIN</MenuItem>
+                                  <MenuItem value="Finance">FINANCE</MenuItem>
+                                  <MenuItem value="crm">CRM</MenuItem>
+                                   <MenuItem value="legal">LEGAL</MenuItem>
+                                   <MenuItem value="electrical">ELECTRICAL</MenuItem>
+                                   <MenuItem value="mep">MEP</MenuItem>
+                                   <MenuItem value="civil">CIVIL</MenuItem>
             </TextField>
           )}
 

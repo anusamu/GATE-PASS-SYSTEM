@@ -3,9 +3,11 @@ import axios from "axios";
 
 import {
   Box,
+  Grid,
   Card,
   CardContent,
   Typography,
+  Stack,
   IconButton,
   Tooltip,
   Table,
@@ -19,18 +21,24 @@ import {
 
 import DeleteIcon from "@mui/icons-material/Delete";
 
+import Sidebar from "../components/SideBar";
+import Navbar from "../components/Navbar";
 import AddUserDialog from "../components/AddUser";
 
-const API =
-  import.meta.env.MODE === "production"
-    ? "https://gate-pass-system-drti.onrender.com"
-    : "http://localhost:5000";
-
+const API = "https://gate-pass-system-drti.onrender.com" ;
 const AdminDashboard = () => {
   /* =======================
      AUTH
   ======================= */
   const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user")) || { role: "admin" };
+
+  /* =======================
+     SIDEBAR STATE
+  ======================= */
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   /* =======================
      DATA STATE
@@ -124,65 +132,81 @@ const AdminDashboard = () => {
   };
 
   return (
-    <Box>
-      {/* USER TABLE */}
-      <Card sx={{ borderRadius: 4 }}>
-        <CardContent>
-          <Typography fontWeight={900} mb={2}>
-            User Management
-          </Typography>
+    <>
+      {/* SIDEBAR */}
+  
 
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell><b>Name</b></TableCell>
-                  <TableCell><b>Email</b></TableCell>
-                  <TableCell><b>Role</b></TableCell>
-                  <TableCell><b>Department</b></TableCell>
-                  <TableCell><b>Action</b></TableCell>
-                </TableRow>
-              </TableHead>
+      {/* MAIN CONTENT */}
+      <Box
+        component="main"
+        sx={{
+          // ml: { sm: collapsed ? "72px" : "260px" },
+          // transition: "margin 0.3s",
+          // minHeight: "100vh",
+          // bgcolor: "#f0fdf4",
+          // p: 3,
+        }}
+      >
+        {/* NAVBAR */}
+     
 
-              <TableBody>
-                {users.map((u) => (
-                  <TableRow key={u._id}>
-                    <TableCell>{u.name}</TableCell>
-                    <TableCell>{u.email}</TableCell>
-                    <TableCell sx={{ textTransform: "uppercase" }}>
-                      {u.role}
-                    </TableCell>
-                    <TableCell>{u.department || "-"}</TableCell>
-                    <TableCell>
-                      <Tooltip title="Delete User">
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDeleteUser(u._id)}
-                          disabled={u.role === "admin"}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
+        {/* USER TABLE */}
+        <Card sx={{ borderRadius: 4 }}>
+          <CardContent>
+            <Typography fontWeight={900} mb={2}>
+              User Management
+            </Typography>
+
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><b>Name</b></TableCell>
+                    <TableCell><b>Email</b></TableCell>
+                    <TableCell><b>Role</b></TableCell>
+                    <TableCell><b>Department</b></TableCell>
+                    <TableCell><b>Action</b></TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+                </TableHead>
 
-      {/* ADD USER DIALOG */}
-      <AddUserDialog
-        open={openAddUser}
-        onClose={() => setOpenAddUser(false)}
-        formData={formData}
-        handleChange={handleChange}
-        handleAddUser={handleAddUser}
-        approvedCount={approvedCount}
-        users={users}
-      />
-    </Box>
+                <TableBody>
+                  {users.map((u) => (
+                    <TableRow key={u._id}>
+                      <TableCell>{u.name}</TableCell>
+                      <TableCell>{u.email}</TableCell>
+                      <TableCell sx={{ textTransform: "uppercase" }}>
+                        {u.role}
+                      </TableCell>
+                      <TableCell>{u.department || "-"}</TableCell>
+                      <TableCell>
+                        <Tooltip title="Delete User">
+                          <IconButton
+                            color="error"
+                            onClick={() => handleDeleteUser(u._id)}
+                            disabled={u.role === "admin"}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+
+        {/* ADD USER DIALOG */}
+        <AddUserDialog
+          open={openAddUser}
+          onClose={() => setOpenAddUser(false)}
+          formData={formData}
+          handleChange={handleChange}
+          handleAddUser={handleAddUser}
+        />
+      </Box>
+    </>
   );
 };
 

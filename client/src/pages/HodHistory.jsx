@@ -13,22 +13,38 @@ import {
   Chip,
   CircularProgress,
 } from "@mui/material";
+import Sidebar from "../components/SideBar";
+import Navbar from "../components/Navbar";
 import PassDetails from "../components/PassDetailsDialog";
-
-const API =
-  import.meta.env.MODE === "production"
-    ? "https://gate-pass-system-drti.onrender.com"
-    : "http://localhost:5000";
 
 const HodHistory = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Dialog states
+  // ✅ Dialog states
   const [open, setOpen] = useState(false);
   const [selectedPass, setSelectedPass] = useState(null);
 
+  // Sidebar states
+  const [activeTab, setActiveTab] = useState("history");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  // ✅ SAFE USER (force hod role)
+  const storedUser = localStorage.getItem("user");
+  const parsedUser = storedUser ? JSON.parse(storedUser) : {};
+
+  const user = {
+    ...parsedUser,
+    role: parsedUser?.role || "hod",
+  };
+
   const token = localStorage.getItem("token");
+
+ const API =
+  import.meta.env.MODE === "production"
+    ? "https://gate-pass-system-drti.onrender.com"
+    : "http://localhost:5000";
 
   useEffect(() => {
     fetchHistory();
@@ -70,65 +86,76 @@ const HodHistory = () => {
   }
 
   return (
-    <Box>
-      <Typography variant="h6" mb={2}>
-        HOD Pass History
-      </Typography>
+    <>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-            <TableRow>
-              <TableCell><b>Pass ID</b></TableCell>
-              <TableCell><b>Staff Name</b></TableCell>
-              <TableCell><b>Purpose</b></TableCell>
-              <TableCell><b>Date</b></TableCell>
-              <TableCell><b>Status</b></TableCell>
-            </TableRow>
-          </TableHead>
 
-          <TableBody>
-            {history.length === 0 ? (
+      <Box
+        component="main"
+        sx={{
+         
+        }}
+      >
+      
+
+        <Typography variant="h6" mb={2}>
+          HOD Pass History
+        </Typography>
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  No history available
-                </TableCell>
+                <TableCell><b>Pass ID</b></TableCell>
+                <TableCell><b>Staff Name</b></TableCell>
+                <TableCell><b>Purpose</b></TableCell>
+                <TableCell><b>Date</b></TableCell>
+                <TableCell><b>Status</b></TableCell>
               </TableRow>
-            ) : (
-              history.map((pass) => (
-                <TableRow
-                  key={pass._id}
-                  hover
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => handleRowClick(pass)}
-                >
-                  <TableCell>{pass._id.slice(-6)}</TableCell>
-                  <TableCell>{pass.requester?.name || "-"}</TableCell>
-                  <TableCell>{pass.purpose || "-"}</TableCell>
-                  <TableCell>
-                    {new Date(pass.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={pass.status}
-                      color={getStatusColor(pass.status)}
-                      size="small"
-                    />
+            </TableHead>
+
+            <TableBody>
+              {history.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    No history available
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              ) : (
+                history.map((pass) => (
+                  <TableRow
+                    key={pass._id}
+                    hover
+                    sx={{ cursor: "pointer" }}
+                    onClick={() => handleRowClick(pass)}
+                  >
+                    <TableCell>{pass._id.slice(-6)}</TableCell>
+                    <TableCell>{pass.requester?.name || "-"}</TableCell>
+                    <TableCell>{pass.purpose || "-"}</TableCell>
+                    <TableCell>
+                      {new Date(pass.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={pass.status}
+                        color={getStatusColor(pass.status)}
+                        size="small"
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
 
-      {/* Pass Details Dialog */}
+      {/* ✅ Pass Details Dialog */}
       <PassDetails
         open={open}
         onClose={() => setOpen(false)}
         pass={selectedPass}
       />
-    </Box>
+    </>
   );
 };
 

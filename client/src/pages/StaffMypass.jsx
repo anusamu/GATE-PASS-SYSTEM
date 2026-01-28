@@ -14,7 +14,10 @@ import {
 } from "@mui/material";
 import PassDetails from "../components/PassDetailsDialog";
 
-const API = "https://gate-pass-system-drti.onrender.com";
+const API =
+  import.meta.env.MODE === "production"
+    ? "https://gate-pass-system-drti.onrender.com"
+    : "http://localhost:5000";
 
 const MyPass = () => {
   // PASS DETAILS DIALOG

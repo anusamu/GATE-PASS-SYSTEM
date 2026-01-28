@@ -1,20 +1,62 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import { Box } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "../components/SideBar";
 import Navbar from "../components/Navbar";
+import axios from "axios";
+
+const API =
+  import.meta.env.MODE === "production"
+    ? "https://gate-pass-system-drti.onrender.com"
+    : "http://localhost:5000";
 
 const DashboardLayout = () => {
-  // ✅ SAFE USER FETCH
   const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : { role: "staff" };
+  const token = localStorage.getItem("token");
 
-  const [activeTab, setActiveTab] = useState("dashboard");
+  if (!storedUser || !token) {
+    return <Navigate to="/" replace />;
+  }
+
+  const user = JSON.parse(storedUser);
+  const role = user.role?.toLowerCase();
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  /* NAVBAR DATA */
+  const [users, setUsers] = useState([]);
+  const [approvedCount, setApprovedCount] = useState(0);
+
+  useEffect(() => {
+    const fetchNavbarData = async () => {
+      try {
+        if (role === "admin") {
+          const res = await axios.get(`${API}/users`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setUsers(res.data || []);
+        }
+
+        if (role === "admin" || role === "hod") {
+          const passRes = await axios.get(
+            `${API}/passes/approved/count`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setApprovedCount(passRes.data.count || 0);
+        }
+      } catch (err) {
+        console.error("Navbar data error:", err);
+      }
+    };
+
+    fetchNavbarData();
+  }, [role, token]);
 
   return (
-    <>
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f8fafc" }}>
+      {/* SIDEBAR */}
       <Sidebar
         user={user}
         activeTab={activeTab}
@@ -25,23 +67,55 @@ const DashboardLayout = () => {
         setCollapsed={setCollapsed}
       />
 
+      {/* MAIN CONTENT */}
       <Box
         component="main"
         sx={{
-          ml: { sm: collapsed ? "72px" : "260px" },
+          flexGrow: 1,
+
+          /* ✅ RESPONSIVE SIDEBAR SPACE */
+          ml: {
+            xs: 0, // mobile → no margin
+            md: collapsed ? "72px" : "260px", // desktop only
+          },
+
           transition: "margin 0.3s",
-          minHeight: "100vh",
-          bgcolor: "#f8fafc",
-          p: 3,
+          px: { xs: 1, sm: 2, md: 3 },
+          pb: 4,
         }}
       >
-        {/* ✅ SAFE ACCESS */}
-        <Navbar role={user.role} setMobileOpen={setMobileOpen} />
+        {/* ✅ STICKY NAVBAR */}
+        <Box
+          sx={{
+            position: "sticky",
+            top: 0,
+            zIndex: 1200,
+            bgcolor: "#f8fafc",
+            pb: 3,
+          }}
+        >
+          <Navbar
+            role={role}
+            setMobileOpen={setMobileOpen}
+            API={API}
+            token={token}
+            approvedCount={approvedCount}
+            users={users}
+          />
+        </Box>
 
-        {/* 🔥 ONLY PAGE CONTENT CHANGES */}
-        <Outlet />
+        {/* PAGE CONTENT WRAPPER */}
+        <Box
+          sx={{
+            maxWidth: "1400px",
+            mx: "auto",
+            width: "100%",
+          }}
+        >
+          <Outlet context={{ user, token, API }} />
+        </Box>
       </Box>
-    </>
+    </Box>
   );
 };
 

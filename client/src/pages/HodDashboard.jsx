@@ -27,14 +27,12 @@ import {
   FileText,
 } from "lucide-react";
 
+import { useOutletContext, Navigate } from "react-router-dom";
 import PassDetails from "../components/PassDetailsDialog";
 
-const API =
-  import.meta.env.MODE === "production"
-    ? "https://gate-pass-system-drti.onrender.com"
-    : "http://localhost:5000";
-
 const HodDashboard = () => {
+  const { token, API, user } = useOutletContext();
+
   const [pendingPasses, setPendingPasses] = useState([]);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedPassId, setSelectedPassId] = useState(null);
@@ -43,13 +41,14 @@ const HodDashboard = () => {
   const [open, setOpen] = useState(false);
   const [selectedPass, setSelectedPass] = useState(null);
 
-  const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user")) || { role: "hod" };
+  // ⛔ Block non-HOD users
+  if (user.role !== "hod") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   useEffect(() => {
-    if (!token || user.role !== "hod") return;
     fetchPendingPasses();
-  }, [token]);
+  }, []);
 
   const fetchPendingPasses = async () => {
     try {
@@ -88,9 +87,8 @@ const HodDashboard = () => {
   };
 
   return (
-    <Box>
+    <>
       <Stack spacing={4} maxWidth="1500px" mx="auto">
-        {/* PASS LIST */}
         {pendingPasses.length === 0 ? (
           <Typography align="center" py={6} fontWeight={700}>
             No pending approvals 🎉
@@ -102,7 +100,6 @@ const HodDashboard = () => {
                 <Card
                   sx={{
                     borderRadius: 4,
-                    bgcolor: "#ffffff",
                     boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
                     cursor: "pointer",
                   }}
@@ -212,11 +209,11 @@ const HodDashboard = () => {
         onClose={() => setOpen(false)}
         pass={selectedPass}
       />
-    </Box>
+    </>
   );
 };
 
-/* ================= INFO ROW ================= */
+/* INFO ROW */
 const InfoRow = ({ icon, label, value, highlight }) => (
   <Box
     sx={{

@@ -136,7 +136,7 @@ const PassCard = ({ pass, onApprove, onReject, role }) => {
       setOpen(true); // opens dialog with print & download
     }}
   >
-    Print / Download Pass
+   Download Pass
   </Button>
 )}
 
