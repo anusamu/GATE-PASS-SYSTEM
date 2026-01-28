@@ -1,58 +1,56 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import AuthPage from "./pages/Login";
+
+import DashboardLayout from "./routes/DashboardLayout";
+
 import DashBoard from "./pages/DashBoard";
-import HodDashboard from "./pages/HodDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 import StaffMypass from "./pages/StaffMypass";
 import StaffHistory from "./pages/StaffHistory";
+
+import HodDashboard from "./pages/HodDashboard";
+import HodHistory from "./pages/HodHistory";
+
+import AdminDashboard from "./pages/AdminDashboard";
+
 import PrivateRoute from "./routes/PrivateRoute";
 import RoleRoute from "./routes/RoleRoute";
-import HodHistory from "./pages/HodHistory";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* PUBLIC ROUTE */}
+        {/* ================= PUBLIC ROUTE ================= */}
         <Route path="/" element={<AuthPage />} />
 
-        {/* STAFF ROUTES */}
+        {/* ================= STAFF ROUTES ================= */}
         <Route
           path="/dashboard"
           element={
             <PrivateRoute>
-              <DashBoard />
+              <DashboardLayout />
             </PrivateRoute>
           }
-        />
+        >
+          <Route index element={<DashBoard />} />
+          <Route path="mypass" element={<StaffMypass />} />
+          <Route path="history" element={<StaffHistory />} />
+        </Route>
 
+        {/* ================= HOD ROUTES ================= */}
         <Route
-          path="/dashboard/mypass"
-          element={
-            <PrivateRoute>
-              <StaffMypass />
-            </PrivateRoute>
-          }
-        />
-
-
-{/* <Route path="/dashboard/history" element={<StaffHistory />} /> */}
-<Route path="/hod/history" element={<HodHistory/>} />
-
-
-        {/* HOD ROUTE */}
-        <Route
-          path="/hod/dashboard"
+          path="/hod"
           element={
             <RoleRoute role="hod">
-              <HodDashboard />
+              <DashboardLayout />
             </RoleRoute>
           }
-        />
+        >
+          <Route path="dashboard" element={<HodDashboard />} />
+          <Route path="history" element={<HodHistory />} />
+        </Route>
 
-        {/* ADMIN ROUTE */}
+        {/* ================= ADMIN ROUTES ================= */}
         <Route
           path="/admin/dashboard"
           element={
@@ -61,7 +59,6 @@ function App() {
             </RoleRoute>
           }
         />
-
       </Routes>
     </BrowserRouter>
   );

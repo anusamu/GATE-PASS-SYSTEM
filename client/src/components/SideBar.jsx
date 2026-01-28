@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Drawer,
   Box,
@@ -12,19 +12,17 @@ import {
   Tooltip,
   Backdrop,
   useMediaQuery,
-  Stack
+  Stack,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import {
   Dashboard,
   Assignment,
   History,
-  People,
-  CheckCircle,
-  Cancel,
   QrCodeScanner,
+  Cancel,
   ChevronLeft,
   ChevronRight,
 } from "@mui/icons-material";
@@ -45,6 +43,7 @@ const Sidebar = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
+  const location = useLocation();
 
   /* =========================
      SAFE ROLE
@@ -52,22 +51,20 @@ const Sidebar = ({
   const role = String(user?.role || "").toLowerCase();
 
   /* =========================
-     ROLE BASED MENU
+     ROLE BASED MENU (UI SAME)
   ========================= */
   const menuByRole = {
     staff: [
       { id: "dashboard", label: "Dashboard", icon: <Dashboard /> },
       { id: "my-passes", label: "My Passes", icon: <Assignment /> },
-      { id: "history", label: "History", icon: <History /> },
+      { id: "staffhistory", label: "History", icon: <History /> },
     ],
     hod: [
       { id: "dashboard", label: "HOD Dashboard", icon: <Dashboard /> },
-      { id: "history", label: "History", icon: <History /> },
+      { id: "hodhistory", label: "History", icon: <History /> },
     ],
     admin: [
       { id: "dashboard", label: "Admin Dashboard", icon: <Dashboard /> },
-      // { id: "users", label: "Users", icon: <People /> },
-      // { id: "approved", label: "Approved Passes", icon: <CheckCircle /> },
     ],
     security: [
       { id: "dashboard", label: "Security Dashboard", icon: <Dashboard /> },
@@ -77,35 +74,47 @@ const Sidebar = ({
   };
 
   /* =========================
-     ROUTES
+     ROUTES (LOGIC ONLY)
   ========================= */
-  const dashboardRouteByRole = {
-    staff: "/dashboard",
-    hod: "/hod/dashboard",
-    admin: "/admin/dashboard",
-    security: "/security/dashboard",
-  };
-
-  const historyRouteByRole = {
-    staff: "/dashboard/history",
-    hod: "/hod/history",
-  };
-
   const routeMap = {
-    dashboard: dashboardRouteByRole[role],
-    "my-passes": role === "staff" ? "/dashboard/mypass" : null,
-    history: historyRouteByRole[role],
-    approved: "/dashboard/approved",
-    rejected: "/dashboard/rejected",
-    verified: "/dashboard/verified",
-    users: "/admin/users",
+    dashboard:
+      role === "staff"
+        ? "/dashboard"
+        : role === "hod"
+        ? "/hod/dashboard"
+        : role === "admin"
+        ? "/admin/dashboard"
+        : "/security/dashboard",
+
+    "my-passes": "/dashboard/mypass",
+    staffhistory: "/dashboard/history",
+    hodhistory: "/hod/history",
+    verified: "/security/verified",
+    rejected: "/security/rejected",
   };
 
   const menuItems = menuByRole[role] || [];
   const drawerWidth = collapsed ? MINI_WIDTH : FULL_WIDTH;
 
   /* =========================
-     SIDEBAR CONTENT
+     ACTIVE TAB SYNC (NO UI CHANGE)
+  ========================= */
+  useEffect(() => {
+    const path = location.pathname;
+
+    if (path.startsWith("/dashboard/history")) {
+      setActiveTab("staffhistory");
+    } else if (path.startsWith("/hod/history")) {
+      setActiveTab("hodhistory");
+    } else if (path.includes("/mypass")) {
+      setActiveTab("my-passes");
+    } else {
+      setActiveTab("dashboard");
+    }
+  }, [location.pathname, setActiveTab]);
+
+  /* =========================
+     SIDEBAR CONTENT (UI SAME)
   ========================= */
   const content = (
     <Box
@@ -127,22 +136,19 @@ const Sidebar = ({
           justifyContent: "space-between",
           alignItems: "center",
           background: GRADIENT,
-          borderRadius:4
-          // borderBottomLeftRadius: 20,
-          // borderBottomRightRadius: 20,
+          borderRadius: 4,
         }}
       >
-    {!collapsed && (
-  <Stack spacing={0} alignItems="flex-start">
-    <Typography fontWeight={1000} color="#fff" fontSize={19}>
-      TECHNOPARK
-    </Typography>
-    <Typography fontWeight={600} color="#fff" fontSize={16}>
-      GATE PASS SYSTEM
-    </Typography>
-  </Stack>
-)}
-
+        {!collapsed && (
+          <Stack spacing={0}>
+            <Typography fontWeight={900} color="#fff" fontSize={19}>
+              TECHNOPARK
+            </Typography>
+            <Typography fontWeight={600} color="#fff" fontSize={15}>
+              GATE PASS SYSTEM
+            </Typography>
+          </Stack>
+        )}
 
         {!isMobile && (
           <IconButton
@@ -219,14 +225,11 @@ const Sidebar = ({
       {!collapsed && (
         <Box p={4}>
           <Box
-  component="img"
-  src="/tp-logo.png"
-  alt="Technopark"
-  sx={{
-    height: 28,
-    width: 200,
-  }}
-/>
+            component="img"
+            src="/tp-logo.png"
+            alt="Technopark"
+            sx={{ height: 28, width: 200 }}
+          />
         </Box>
       )}
     </Box>

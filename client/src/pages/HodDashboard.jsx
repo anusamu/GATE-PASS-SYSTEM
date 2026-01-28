@@ -18,7 +18,6 @@ import {
 } from "@mui/material";
 
 import {
-  ShieldCheck,
   CheckCircle,
   XCircle,
   User,
@@ -28,17 +27,14 @@ import {
   FileText,
 } from "lucide-react";
 
-import Sidebar from "../components/SideBar";
-import Navbar from "../components/Navbar";
 import PassDetails from "../components/PassDetailsDialog";
 
-const API = "https://gate-pass-system-drti.onrender.com" ;
+const API =
+  import.meta.env.MODE === "production"
+    ? "https://gate-pass-system-drti.onrender.com"
+    : "http://localhost:5000";
 
 const HodDashboard = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-
   const [pendingPasses, setPendingPasses] = useState([]);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedPassId, setSelectedPassId] = useState(null);
@@ -92,157 +88,131 @@ const HodDashboard = () => {
   };
 
   return (
-    <>
-      {/* SIDEBAR */}
-      <Sidebar
-        user={user}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-      />
+    <Box>
+      <Stack spacing={4} maxWidth="1500px" mx="auto">
+        {/* PASS LIST */}
+        {pendingPasses.length === 0 ? (
+          <Typography align="center" py={6} fontWeight={700}>
+            No pending approvals 🎉
+          </Typography>
+        ) : (
+          <Grid container spacing={3}>
+            {pendingPasses.map((pass) => (
+              <Grid item xs={12} md={6} lg={4} key={pass._id}>
+                <Card
+                  sx={{
+                    borderRadius: 4,
+                    bgcolor: "#ffffff",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    setSelectedPass(pass);
+                    setOpen(true);
+                  }}
+                >
+                  <CardContent>
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography fontWeight={900}>Gate Pass</Typography>
+                      <Chip label="PENDING" color="warning" size="small" />
+                    </Stack>
 
-      {/* MAIN CONTENT */}
-      <Box
-        component="main"
-        sx={{
-          ml: { sm: collapsed ? "72px" : "260px" },
-          transition: "margin 0.3s ease",
-          minHeight: "100vh",
-          bgcolor: "#f0fdfa",
-          p: { xs: 2, md: 3 },
-        }}
+                    <Divider sx={{ my: 2 }} />
+
+                    <InfoRow icon={<User size={16} />} label="Requester" value={pass.requesterName} />
+                    <InfoRow icon={<Mail size={16} />} label="Email" value={pass.requesterEmail} />
+                    <InfoRow icon={<Package size={16} />} label="Asset" value={pass.assetName} />
+                    <InfoRow icon={<FileText size={16} />} label="Purpose" value={pass.purpose} />
+                    <InfoRow label="Serial No" value={pass.assetSerialNo} />
+
+                    {pass.passType === "RETURNABLE" && (
+                      <>
+                        <Divider sx={{ my: 2 }} />
+                        <InfoRow
+                          icon={<Calendar size={16} />}
+                          label="Return Date"
+                          value={pass.returnDateTime}
+                          highlight
+                        />
+                      </>
+                    )}
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Stack direction="row" spacing={2}>
+                      <Button
+                        fullWidth
+                        startIcon={<CheckCircle />}
+                        variant="contained"
+                        sx={{ bgcolor: "#22c55e" }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          approvePass(pass._id);
+                        }}
+                      >
+                        Approve
+                      </Button>
+
+                      <Button
+                        fullWidth
+                        startIcon={<XCircle />}
+                        variant="outlined"
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPassId(pass._id);
+                          setRejectDialogOpen(true);
+                        }}
+                      >
+                        Reject
+                      </Button>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Stack>
+
+      {/* REJECT DIALOG */}
+      <Dialog
+        open={rejectDialogOpen}
+        onClose={() => setRejectDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
       >
-        {/* NAVBAR (REPLACED HEADER) */}
-        <Navbar role="hod" setMobileOpen={setMobileOpen} />
+        <DialogTitle fontWeight={900}>Reject Gate Pass</DialogTitle>
+        <DialogContent dividers>
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            label="Reason for rejection"
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={rejectPass}
+            disabled={!rejectionReason.trim()}
+          >
+            Reject
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-        <Stack spacing={4} maxWidth="1500px" mx="auto">
-          {/* PASS LIST */}
-          {pendingPasses.length === 0 ? (
-            <Typography align="center" py={6} fontWeight={700}>
-              No pending approvals 🎉
-            </Typography>
-          ) : (
-            <Grid container spacing={3}>
-              {pendingPasses.map((pass) => (
-                <Grid item xs={12} md={6} lg={4} key={pass._id}>
-                  <Card
-                    sx={{
-                      borderRadius: 4,
-                      bgcolor: "#ffffff",
-                      boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-                      cursor: "pointer",
-                    }}
-                    onClick={() => {
-                      setSelectedPass(pass);
-                      setOpen(true);
-                    }}
-                  >
-                    <CardContent>
-                      <Stack direction="row" justifyContent="space-between">
-                        <Typography fontWeight={900}>Gate Pass</Typography>
-                        <Chip label="PENDING" color="warning" size="small" />
-                      </Stack>
-
-                      <Divider sx={{ my: 2 }} />
-
-                      <InfoRow icon={<User size={16} />} label="Requester" value={pass.requesterName} />
-                      <InfoRow icon={<Mail size={16} />} label="Email" value={pass.requesterEmail} />
-                      <InfoRow icon={<Package size={16} />} label="Asset" value={pass.assetName} />
-                      <InfoRow icon={<FileText size={16} />} label="Purpose" value={pass.purpose} />
-                      <InfoRow label="Serial No" value={pass.assetSerialNo} />
-
-                      {pass.passType === "RETURNABLE" && (
-                        <>
-                          <Divider sx={{ my: 2 }} />
-                          <InfoRow
-                            icon={<Calendar size={16} />}
-                            label="Return Date"
-                            value={pass.returnDateTime}
-                            highlight
-                          />
-                        </>
-                      )}
-
-                      <Divider sx={{ my: 2 }} />
-
-                      <Stack direction="row" spacing={2}>
-                        <Button
-                          fullWidth
-                          startIcon={<CheckCircle />}
-                          variant="contained"
-                          sx={{ bgcolor: "#22c55e" }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            approvePass(pass._id);
-                          }}
-                        >
-                          Approve
-                        </Button>
-
-                        <Button
-                          fullWidth
-                          startIcon={<XCircle />}
-                          variant="outlined"
-                          color="error"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedPassId(pass._id);
-                            setRejectDialogOpen(true);
-                          }}
-                        >
-                          Reject
-                        </Button>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          )}
-        </Stack>
-
-        {/* REJECT DIALOG */}
-        <Dialog
-          open={rejectDialogOpen}
-          onClose={() => setRejectDialogOpen(false)}
-          fullWidth
-          maxWidth="sm"
-        >
-          <DialogTitle fontWeight={900}>Reject Gate Pass</DialogTitle>
-          <DialogContent dividers>
-            <TextField
-              fullWidth
-              multiline
-              minRows={3}
-              label="Reason for rejection"
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
-            <Button
-              variant="contained"
-              color="error"
-              onClick={rejectPass}
-              disabled={!rejectionReason.trim()}
-            >
-              Reject
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Box>
-
-      {/* PASS DETAILS DIALOG */}
+      {/* PASS DETAILS */}
       <PassDetails
         open={open}
         onClose={() => setOpen(false)}
         pass={selectedPass}
       />
-    </>
+    </Box>
   );
 };
 

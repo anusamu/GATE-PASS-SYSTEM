@@ -533,7 +533,7 @@ exports.viewPass = async (req, res) => {
       return res.status(404).send("<h2>Pass not found or not approved</h2>");
     }
 
-    const pdfUrl = `${process.env.BACKEND_URL}/api/auth/pass/download/${pass._id}`;
+    const pdfUrl = `${process.env.BACKEND_URL}/pass/download/${pass._id}`;
 
     res.send(`
       <!DOCTYPE html>

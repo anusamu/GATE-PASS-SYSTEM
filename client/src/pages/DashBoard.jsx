@@ -19,21 +19,20 @@ import {
 } from "lucide-react";
 
 import PassCard from "../components/PassCard";
-import Sidebar from "../components/SideBar";
-import Navbar from "../components/Navbar";
 
-const API = "https://gate-pass-system-drti.onrender.com";
+const API =
+  import.meta.env.MODE === "production"
+    ? "https://gate-pass-system-drti.onrender.com"
+    : "http://localhost:5000";
 
 /* ===========================
    HELPER
 =========================== */
+
 const normalizeStatus = (status = "") => status.toUpperCase();
 
 const Dashboard = () => {
   const [passes, setPasses] = useState([]);
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
 
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user")) || { role: "staff" };
@@ -62,116 +61,88 @@ const Dashboard = () => {
   const recentPasses = passes.slice(0, 3);
 
   return (
-    <>
-      {/* SIDEBAR */}
-      <Sidebar
-        user={user}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-      />
-    
+    <Box>
+      <Stack spacing={4}>
+        {/* STATS */}
+        <Grid container spacing={3}>
+          <StatCard
+            title="Total Passes"
+            value={passes.length}
+            icon={<FileText />}
+            bg="#cbefe6ff"
+            iconColor="#4338CA"
+          />
 
-      {/* MAIN CONTENT */}
-      <Box
-        component="main"
-        sx={{
-          ml: { sm: collapsed ? "72px" : "260px" },
-          transition: "margin 0.3s",
-          minHeight: "100vh",
-          bgcolor: "#f8fafc",
-          p: 3,
-        }}
-      >
-        <Navbar role={role} setMobileOpen={setMobileOpen} />
-        <br />
+          <StatCard
+            title="Approved"
+            value={passes.filter(
+              (p) => normalizeStatus(p.status) === "APPROVED"
+            ).length}
+            icon={<Users />}
+            bg="#cbefe6ff"
+            iconColor="#15803D"
+          />
 
-        <Stack spacing={4}>
-          {/* STATS */}
-          <Grid container spacing={3}>
-            <StatCard
-              title="Total Passes"
-              value={passes.length}
-              icon={<FileText />}
-              bg="#cbefe6ff"
-              iconColor="#4338CA"
-             
-            />
+          <StatCard
+            title="Pending"
+            value={passes.filter(
+              (p) => normalizeStatus(p.status) === "PENDING"
+            ).length}
+            icon={<AlertCircle />}
+            bg="#cbefe6ff"
+            iconColor="#C2410C"
+          />
 
-            <StatCard
-              title="Approved"
-              value={passes.filter(
-                (p) => normalizeStatus(p.status) === "APPROVED"
-              ).length}
-              icon={<Users />}
-              bg="#cbefe6ff"
-              iconColor="#15803D"
-            />
+          <StatCard
+            title="Completed"
+            value={passes.filter(
+              (p) => normalizeStatus(p.status) === "COMPLETED"
+            ).length}
+            icon={<CheckCircle2 />}
+            bg="#cbefe6ff"
+            iconColor="#166534"
+          />
+        </Grid>
 
-            <StatCard
-              title="Pending"
-              value={passes.filter(
-                (p) => normalizeStatus(p.status) === "PENDING"
-              ).length}
-              icon={<AlertCircle />}
-              bg="#cbefe6ff"
-              iconColor="#C2410C"
-            />
+        {/* RECENT PASSES */}
+        <Card sx={{ borderRadius: 4 }}>
+          <CardContent>
+            <Stack direction="row" spacing={1} mb={3} alignItems="center">
+              <History size={20} />
+              <Typography fontWeight={800}>
+                Recent Gate Pass Activity
+              </Typography>
+            </Stack>
 
-            <StatCard
-              title="Completed"
-              value={passes.filter(
-                (p) => normalizeStatus(p.status) === "COMPLETED"
-              ).length}
-              icon={<CheckCircle2 />}
-              bg="#cbefe6ff"
-              iconColor="#166534"
-            />
-          </Grid>
-
-          {/* RECENT PASSES */}
-          <Card sx={{ borderRadius: 4 }}>
-            <CardContent>
-              <Stack direction="row" spacing={1} mb={3} alignItems="center">
-                <History size={20} />
-                <Typography fontWeight={800}>
-                  Recent Gate Pass Activity
+            <Grid container spacing={3}>
+              {recentPasses.length === 0 ? (
+                <Typography align="center" width="100%" py={6}>
+                  No gate pass requests yet
                 </Typography>
-              </Stack>
-
-              <Grid container spacing={3}>
-                {recentPasses.length === 0 ? (
-                  <Typography align="center" width="100%" py={6}>
-                    No gate pass requests yet
-                  </Typography>
-                ) : (
-                  recentPasses.map((pass) => (
-                    <Grid key={pass._id} item xs={12} sm={6} lg={3}>
-                      <PassCard pass={pass} role={role} />
-                    </Grid>
-                  ))
-                )}
-              </Grid>
-            </CardContent>
-          </Card>
-        </Stack>
-      </Box>
-    </>
+              ) : (
+                recentPasses.map((pass) => (
+                  <Grid key={pass._id} item xs={12} sm={6} lg={3}>
+                    <PassCard pass={pass} role={role} />
+                  </Grid>
+                ))
+              )}
+            </Grid>
+          </CardContent>
+        </Card>
+      </Stack>
+    </Box>
   );
 };
 
 /* ===========================
-   STAT CARD (EDITED)
+   STAT CARD (UNCHANGED UI)
 =========================== */
 const StatCard = ({ title, value, icon, bg, iconColor }) => (
   <Grid item xs={12} sm={6} md={4}>
     <Card
       sx={{
         height: 120,
-        width:270,
+        width: 270,
         borderRadius: 4,
         backgroundColor: bg,
         boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
@@ -180,7 +151,6 @@ const StatCard = ({ title, value, icon, bg, iconColor }) => (
           transform: "translateY(-4px)",
           boxShadow: "0 14px 30px rgba(0,0,0,0.12)",
         },
-       
       }}
     >
       <Stack
@@ -209,7 +179,7 @@ const StatCard = ({ title, value, icon, bg, iconColor }) => (
             justifyContent: "center",
             color: iconColor,
             boxShadow: "0 6px 14px rgba(0,0,0,0.12)",
-            marginLeft:5
+            ml: 2,
           }}
         >
           {icon}
