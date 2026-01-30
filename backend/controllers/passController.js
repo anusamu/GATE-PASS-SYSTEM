@@ -7,6 +7,7 @@ const path = require("path");
 const fs = require("fs");
 const QRCode = require("qrcode");
 const { v4: uuidv4 } = require("uuid");
+const QRCode = require("qrcode");
 
 const isValidEmail = (email) =>
   typeof email === "string" &&
@@ -554,382 +555,103 @@ exports.viewPass = async (req, res) => {
     const pdfUrl = `${process.env.BACKEND_URL}/pass/download/${pass._id}`;
 
     res.send(`
-      <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Gate Pass</title>
+<meta charset="UTF-8" />
+<title>Gate Pass</title>
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- QR Code -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-  <style>
-    body {
-      font-family: "Inter", sans-serif;
-      background: #f2f4f7;
-      margin: 0;
-      padding: 40px;
-    }
-
-    .dialog {
-      max-width: 900px;
-      margin: auto;
-      background: #fff;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    }
-
-    /* HEADER */
-    .header {
-      background: linear-gradient(135deg,#2563eb,#22c55e);
-      color: white;
-      padding: 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo-box {
-      background: white;
-      padding: 6px 10px;
-      border-radius: 6px;
-      display: inline-flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .logo-box img {
-      height: 28px;
-      width: 150px;
-      object-fit: contain;
-    }
-
-    .title {
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      margin: 5px 0;
-    }
-
-    .subtitle {
-      font-size: 13px;
-      opacity: 0.8;
-      margin-bottom: 10px;
-    }
-
-    .status {
-      display: inline-block;
-      background: #00c853;
-      padding: 6px 22px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 800;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-    }
-
-    /* QR */
-    .qr-box {
-      background: white;
-      padding: 10px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-    }
-
-    .qr-text {
-      font-size: 10px;
-      font-weight: 900;
-      margin-top: 6px;
-      color: #2c5364;
-    }
-
-    /* CONTENT */
-    .content {
-      padding: 32px;
-    }
-
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      font-weight: 800;
-      color: #2563eb;
-      margin-bottom: 16px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-    }
-
-    .data-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .icon-box {
-      background: #f0f4f8;
-      padding: 6px;
-      border-radius: 6px;
-      color: #2c5364;
-    }
-
-    .label {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: #6b7280;
-    }
-
-    .value {
-      font-size: 15px;
-      font-weight: 700;
-      color: #2d3436;
-    }
-
-    hr {
-      border: none;
-      border-top: 1px solid #eee;
-      margin: 28px 0;
-    }
-
-    /* PHOTO */
-    .photo-section {
-      text-align: center;
-      border-top: 1px solid #eee;
-      padding-top: 20px;
-    }
-
-    .photo-section img {
-      max-width: 400px;
-      max-height: 220px;
-      border-radius: 12px;
-      border: 1px solid #eee;
-      padding: 6px;
-      background: #f9f9f9;
-    }
-
-    /* ACTIONS */
-    .actions {
-      display: flex;
-      gap: 16px;
-      padding: 24px;
-      border-top: 1px solid #eee;
-      background: #fcfcfc;
-    }
-
-    .btn {
-      flex: 1;
-      padding: 14px;
-      font-size: 14px;
-      font-weight: 700;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    .btn-primary {
-      background: #2563eb;
-      color: white;
-      border: none;
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 2px solid #2c5364;
-      color: #2c5364;
-    }
-
-    /* PRINT */
-    @media print {
-      body {
-        background: white;
-        padding: 0;
-      }
-      .actions {
-        display: none;
-      }
-      .dialog {
-        box-shadow: none;
-        border-radius: 0;
-      }
-    }
-  </style>
+<style>
+  body { font-family: Arial, sans-serif; background:#f2f4f7; padding:20px }
+  .dialog { max-width:900px; margin:auto; background:#fff; border-radius:16px; overflow:hidden }
+  .header { background:linear-gradient(135deg,#2563eb,#22c55e); color:#fff; padding:30px; display:flex; justify-content:space-between }
+  .logo-box { background:#fff; padding:6px 10px; border-radius:6px }
+  .status { background:#00c853; padding:6px 20px; border-radius:20px; font-weight:bold }
+  .qr-box { background:#fff; padding:10px; border-radius:12px; text-align:center }
+  .content { padding:30px }
+  .label { font-size:10px; text-transform:uppercase; color:#6b7280 }
+  .value { font-weight:700 }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px }
+  .photo-section { text-align:center; margin-top:30px }
+</style>
 </head>
 
 <body>
+<div class="dialog">
 
-<div class="dialog" id="printable-pass">
-
-  <!-- HEADER -->
   <div class="header">
     <div>
       <div class="logo-box">
-          <img 
-  src="https://gate-pass-system-kappa.vercel.app/tp-logo.png"
-  alt="Technopark"
-  style="width:180px; "
-/>
+        <img src="https://gate-pass-system-kappa.vercel.app/tp-logo.png" width="160"/>
       </div>
-
-      <div class="title">GATE PASS</div>
-      <div class="subtitle">Verification ID:${pass._id}</div>
-
+      <h2>GATE PASS</h2>
+      <div>Verification ID: ${pass._id}</div>
       <div class="status">${pass.status}</div>
     </div>
 
-    <div class="qr-box">
-      <div id="qrcode">${pass.qrCode}</div>
-      <div class="qr-text">SCAN VALIDATION</div>
-    </div>
+    ${
+      qrImage
+        ? `<div class="qr-box">
+            <img src="${qrImage}" width="140" />
+            <div style="font-size:10px;font-weight:bold">SCAN VALIDATION</div>
+          </div>`
+        : ""
+    }
   </div>
 
-  <!-- CONTENT -->
   <div class="content">
 
-    <!-- REQUESTER -->
-    <div class="section-title">
-      <i data-lucide="building"></i> REQUESTER INFORMATION
-    </div>
+    <h4>REQUESTER INFORMATION</h4>
     <div class="grid">
-      <div class="data-row">
-        <div class="icon-box"><i data-lucide="user"></i></div>
-        <div>
-          <div class="label">Requester Name</div>
-          <div class="value"> ${pass.requesterName}</div>
-        </div>
-      </div>
- <div class="data-row">
-        <div class="icon-box"><i data-lucide="text"></i></div>
-        <div>
-          <div class="label">Department</div>
-          <div class="value">${pass.department}</div>
-        </div>
-      </div>
-
-      <div class="data-row">
-        <div class="icon-box"><i data-lucide="mail"></i></div>
-        <div>
-          <div class="label">Official Email</div>
-          <div class="value">${pass.requesterEmail}</div>
-        </div>
-      </div>
-
-      <div class="data-row">
-        <div class="icon-box"><i data-lucide="text"></i></div>
-        <div>
-          <div class="label">Purpose</div>
-          <div class="value">${pass.purpose || "-"}</div>
-        </div>
-      </div>
+      <div><div class="label">Name</div><div class="value">${pass.requesterName}</div></div>
+      <div><div class="label">Department</div><div class="value">${pass.department}</div></div>
+      <div><div class="label">Email</div><div class="value">${pass.requesterEmail}</div></div>
+      <div><div class="label">Purpose</div><div class="value">${pass.purpose || "-"}</div></div>
     </div>
 
-    <hr />
+    <hr/>
 
-    <!-- ASSET -->
-    <div class="section-title">
-      <i data-lucide="laptop"></i> ASSET & LOGISTICS
-    </div>
+    <h4>ASSET DETAILS</h4>
     <div class="grid">
-      <div class="data-row">
-        <div class="icon-box"><i data-lucide="badge"></i></div>
-        <div>
-          <div class="label">Asset Name</div>
-          <div class="value"> ${pass.assetName}</div>
-        </div>
-      </div>
-
-      <div class="data-row">
-        <div class="icon-box"><i data-lucide="id-card"></i></div>
-        <div>
-          <div class="label">Serial Number</div>
-          <div class="value">${pass.assetSerialNo}</div>
-        </div>
-      </div>
-
-      <div class="data-row">
-        <div class="icon-box"><i data-lucide="calendar"></i></div>
-        <div>
-          <div class="label">Out Date</div>
-          <div class="value">${pass.outDate}</div>
-        </div>
-      </div>
-    </div>
-${
-            pass.passType === "RETURNABLE"
-              ? `<div class="row"><span class="label">Return Date:</span> ${new Date(
-                  pass.returnDateTime
-                ).toLocaleString()}</div>`
-              : ""
-          }
-    <hr />
-
-    <!-- VISITOR -->
-    <div class="section-title">
-      <i data-lucide="user"></i> VISITOR / CARRY PERSON
+      <div><div class="label">Asset</div><div class="value">${pass.assetName}</div></div>
+      <div><div class="label">Serial</div><div class="value">${pass.assetSerialNo}</div></div>
+      <div><div class="label">Out Date</div><div class="value">${pass.outDate}</div></div>
     </div>
 
+    ${
+      pass.passType === "RETURNABLE"
+        ? `<p><b>Return Date:</b> ${new Date(pass.returnDateTime).toLocaleString()}</p>`
+        : ""
+    }
+
+    <hr/>
+
+    <h4>CARRY PERSON</h4>
     <div class="grid">
-      <div class="data-row">
-        <div class="icon-box"><i data-lucide="user"></i></div>
-        <div>
-          <div class="label">Carry Person</div>
-          <div class="value">${pass.externalPersonName}</div>
-        </div>
-      </div>
-
-    <div class="grid">
-      <div class="data-row">
-        <div class="icon-box"><i data-lucide="user"></i></div>
-        <div>
-          <div class="label">Carry Person Email</div>
-          <div class="value">${pass.externalPersonEmail}</div>
-        </div>
-      </div>
-
-      <div class="data-row">
-        <div class="icon-box"><i data-lucide="phone"></i></div>
-        <div>
-          <div class="label">Contact</div>
-          <div class="value">${pass.externalPersonPhone}</div>
-        </div>
-      </div>
+      <div><div class="label">Name</div><div class="value">${pass.externalPersonName}</div></div>
+      <div><div class="label">Email</div><div class="value">${pass.externalPersonEmail}</div></div>
+      <div><div class="label">Phone</div><div class="value">${pass.externalPersonPhone}</div></div>
     </div>
 
-    <!-- PHOTO --><div class="photo-section" id="photoSection" style="display: none;">
-  <div class="label">VISUAL ASSET VERIFICATION</div><br />
-  <img id="assetPhoto" alt="Asset Photo" />
-</div>
+    ${
+      pass.photo
+        ? `<div class="photo-section">
+            <div class="label">Visual Asset Verification</div><br/>
+            <img src="${pass.photo}" style="max-width:350px;border-radius:12px"/>
+          </div>`
+        : ""
+    }
 
-<script>
-  const photoUrl = pass?.photo; // from backend / JS object
-
-  if (photoUrl) {
-    document.getElementById("assetPhoto").src = photoUrl;
-    document.getElementById("photoSection").style.display = "block";
-  }
-</script>
+    <div style="text-align:center;margin-top:30px">
+      <a href="${pdfUrl}" target="_blank">Download Gate Pass (PDF)</a>
+    </div>
 
   </div>
-
-  <!-- ACTIONS -->
- 
-
 </div>
-<div style="text-align:center">
-            <a class="btn" href="${pdfUrl}" target="_blank">
-              Download Gate Pass (PDF)
-            </a>
-          </div>
 </body>
 </html>
-    `);
+`);
+
   } catch (error) {
     console.error("VIEW PASS ERROR:", error);
     res.status(500).send("<h2>Server error</h2>");
