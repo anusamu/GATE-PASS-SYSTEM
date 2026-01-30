@@ -11,6 +11,7 @@ const API =
     : "http://localhost:5000";
 
 const DashboardLayout = () => {
+  /* ================= AUTH CHECK ================= */
   const storedUser = localStorage.getItem("user");
   const token = localStorage.getItem("token");
 
@@ -21,33 +22,43 @@ const DashboardLayout = () => {
   const user = JSON.parse(storedUser);
   const role = user.role?.toLowerCase();
 
+  /* ================= UI STATE ================= */
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  /* NAVBAR DATA */
+  /* ================= NAVBAR DATA ================= */
   const [users, setUsers] = useState([]);
   const [approvedCount, setApprovedCount] = useState(0);
 
+  /* ================= FETCH NAVBAR DATA ================= */
   useEffect(() => {
     const fetchNavbarData = async () => {
       try {
+        // ADMIN → Users list
         if (role === "admin") {
           const res = await axios.get(`${API}/users`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           });
           setUsers(res.data || []);
         }
 
+        // ADMIN & HOD → Approved pass count
         if (role === "admin" || role === "hod") {
           const passRes = await axios.get(
             `${API}/passes/approved/count`,
-            { headers: { Authorization: `Bearer ${token}` } }
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
           setApprovedCount(passRes.data.count || 0);
         }
-      } catch (err) {
-        console.error("Navbar data error:", err);
+      } catch (error) {
+        console.error("Navbar data error:", error);
       }
     };
 
@@ -56,7 +67,7 @@ const DashboardLayout = () => {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f8fafc" }}>
-      {/* SIDEBAR */}
+      {/* ================= SIDEBAR ================= */}
       <Sidebar
         user={user}
         activeTab={activeTab}
@@ -67,24 +78,24 @@ const DashboardLayout = () => {
         setCollapsed={setCollapsed}
       />
 
-      {/* MAIN CONTENT */}
+      {/* ================= MAIN CONTENT ================= */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
 
-          /* ✅ RESPONSIVE SIDEBAR SPACE */
+          /* Responsive sidebar spacing */
           ml: {
-            xs: 0, // mobile → no margin
-            md: collapsed ? "72px" : "260px", // desktop only
+            xs: 0,
+            md: collapsed ? "72px" : "260px",
           },
 
-          transition: "margin 0.3s",
+          transition: "margin 0.3s ease",
           px: { xs: 1, sm: 2, md: 3 },
           pb: 4,
         }}
       >
-        {/* ✅ STICKY NAVBAR */}
+        {/* ================= NAVBAR ================= */}
         <Box
           sx={{
             position: "sticky",
@@ -104,7 +115,7 @@ const DashboardLayout = () => {
           />
         </Box>
 
-        {/* PAGE CONTENT WRAPPER */}
+        {/* ================= PAGE CONTENT ================= */}
         <Box
           sx={{
             maxWidth: "1400px",

@@ -38,20 +38,23 @@ const PassDetails = ({ open, onClose, pass }) => {
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{ 
+      PaperProps={{
         style: { borderRadius: 16, overflow: "hidden" },
-        id: "printable-pass" // Target for potential print libraries
+        id: "printable-pass",
       }}
       sx={{
-        // Printing styles to ensure the modal content fills the page
         "@media print": {
           "& .MuiDialog-container": { display: "block" },
-          "& .MuiPaper-root": { margin: 0, width: "100%", borderRadius: 0, boxShadow: "none" },
-          "& .MuiDialogActions-root": { display: "none" }, // Hide buttons on print
-        }
+          "& .MuiPaper-root": {
+            margin: 0,
+            width: "100%",
+            borderRadius: 0,
+            boxShadow: "none",
+          },
+          "& .MuiDialogActions-root": { display: "none" },
+        },
       }}
       className="print-area"
-          onClick={() => setOpen(true)}
     >
       {/* HEADER SECTION */}
       <Box
@@ -60,16 +63,34 @@ const PassDetails = ({ open, onClose, pass }) => {
           color: "white",
           p: 4,
         }}
-         
       >
         <Grid container alignItems="center" spacing={2}>
           <Grid item xs={12} sm={8}>
+            <Box
+              sx={{
+                backgroundColor: "white",
+                padding: "6px 10px",
+                borderRadius: 1,
+                display: "inline-flex",
+                alignItems: "center",
+              }}
+            >
+              <Box
+                component="img"
+                src="/tp-logo.png"
+                alt="Technopark"
+                sx={{ height: 28, width: 150, objectFit: "contain" }}
+              />
+            </Box>
+
             <Typography variant="h4" fontWeight={800} sx={{ letterSpacing: 1 }}>
               GATE PASS
             </Typography>
+
             <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
               Verification ID: {pass._id?.toUpperCase()}
             </Typography>
+
             <Box
               sx={{
                 display: "inline-block",
@@ -87,18 +108,18 @@ const PassDetails = ({ open, onClose, pass }) => {
             </Box>
           </Grid>
 
-          {/* QR CODE - Fixed Positioning */}
+          {/* QR CODE */}
           <Grid
-  item
-  xs={12}
-  sm={4}
-  sx={{
- mr: { xs: 0, sm: 6 }, // 6 = theme spacing (6 × 8px = 48px)
-    display: "flex",
-    marginLeft:"150px",
-    justifyContent: { xs: "flex-start", sm: "flex-end" },
-  }}
->
+            item
+            xs={12}
+            sm={4}
+            sx={{
+              mr: { xs: 0, sm: 6 },
+              display: "flex",
+              marginLeft: "300px",
+              justifyContent: { xs: "flex-start", sm: "flex-end" },
+            }}
+          >
             {isApproved && (
               <Box
                 sx={{
@@ -107,15 +128,26 @@ const PassDetails = ({ open, onClose, pass }) => {
                   borderRadius: 2,
                   boxShadow: "0 8px 20px rgba(0,0,0,0.3)",
                   textAlign: "center",
-                //   minWidth: 110,
-                  
                 }}
               >
-                <QRCode size={100} value={JSON.stringify({ passId: pass._id })} style={{ height: "auto", maxWidth: "100%", width: "100%" }} />
+                <QRCode
+                  size={100}
+                  value={JSON.stringify({ passId: pass._id })}
+                  style={{
+                    height: "auto",
+                    maxWidth: "100%",
+                    width: "100%",
+                  }}
+                />
                 <Typography
                   variant="caption"
                   display="block"
-                  sx={{ color: "#2c5364", fontWeight: 900, mt: 0.5, fontSize: "0.6rem" }}
+                  sx={{
+                    color: "#2c5364",
+                    fontWeight: 900,
+                    mt: 0.5,
+                    fontSize: "0.6rem",
+                  }}
                 >
                   SCAN VALIDATION
                 </Typography>
@@ -129,13 +161,31 @@ const PassDetails = ({ open, onClose, pass }) => {
         <Stack spacing={4}>
           {/* REQUESTER SECTION */}
           <Box>
-            <Typography variant="subtitle2" color="primary" fontWeight={800} gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography
+              variant="subtitle2"
+              color="primary"
+              fontWeight={800}
+              gutterBottom
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
               <Business fontSize="small" /> REQUESTER INFORMATION
             </Typography>
             <Grid container spacing={2}>
-              <DataRow icon={<Person fontSize="small" />} label="Requester Name" value={pass.requesterName} />
-              <DataRow icon={<Email fontSize="small" />} label="Official Email" value={pass.requesterEmail} />
-              <DataRow icon={<Email fontSize="small" />} label="Purpose" value={pass.purpose} />
+              <DataRow
+                icon={<Person fontSize="small" />}
+                label="Requester Name"
+                value={pass.requesterName}
+              />
+              <DataRow
+                icon={<Email fontSize="small" />}
+                label="Official Email"
+                value={pass.requesterEmail}
+              />
+              <DataRow
+                icon={<Email fontSize="small" />}
+                label="Purpose"
+                value={pass.purpose}
+              />
             </Grid>
           </Box>
 
@@ -143,16 +193,42 @@ const PassDetails = ({ open, onClose, pass }) => {
 
           {/* ASSET SECTION */}
           <Box>
-            <Typography variant="subtitle2" color="primary" fontWeight={800} gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography
+              variant="subtitle2"
+              color="primary"
+              fontWeight={800}
+              gutterBottom
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
               <Laptop fontSize="small" /> ASSET & LOGISTICS
             </Typography>
             <Grid container spacing={2}>
-              <DataRow icon={<Badge fontSize="small" />} label="Asset Name" value={pass.assetName} />
-              <DataRow icon={<AssignmentInd fontSize="small" />} label="Serial Number" value={pass.assetSerialNo} />
-              <DataRow icon={<AssignmentInd fontSize="small" />} label="Pass Type" value={pass.passType} />
-              <DataRow icon={<Event fontSize="small" />} label="Out Date" value={pass.outDate} />
+              <DataRow
+                icon={<Badge fontSize="small" />}
+                label="Asset Name"
+                value={pass.assetName}
+              />
+              <DataRow
+                icon={<AssignmentInd fontSize="small" />}
+                label="Serial Number"
+                value={pass.assetSerialNo}
+              />
+              <DataRow
+                icon={<AssignmentInd fontSize="small" />}
+                label="Pass Type"
+                value={pass.passType}
+              />
+              <DataRow
+                icon={<Event fontSize="small" />}
+                label="Out Date"
+                value={pass.outDate}
+              />
               {pass.passType === "RETURNABLE" && (
-                <DataRow icon={<Event fontSize="small" />} label="Return Schedule" value={pass.returnDateTime} />
+                <DataRow
+                  icon={<Event fontSize="small" />}
+                  label="Return Schedule"
+                  value={pass.returnDateTime}
+                />
               )}
             </Grid>
           </Box>
@@ -161,13 +237,31 @@ const PassDetails = ({ open, onClose, pass }) => {
 
           {/* VISITOR SECTION */}
           <Box>
-            <Typography variant="subtitle2" color="primary" fontWeight={800} gutterBottom sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography
+              variant="subtitle2"
+              color="primary"
+              fontWeight={800}
+              gutterBottom
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
               <Person fontSize="small" /> VISITOR / CARRY PERSON
             </Typography>
             <Grid container spacing={2}>
-              <DataRow icon={<Person fontSize="small" />} label="Visitor Name" value={pass.externalPersonName} />
-              <DataRow icon={<Phone fontSize="small" />} label="Contact" value={pass.externalPersonPhone} />
-              <DataRow icon={<Email fontSize="small" />} label="Visitor Email" value={pass.externalPersonEmail} />
+              <DataRow
+                icon={<Person fontSize="small" />}
+                label="Visitor Name"
+                value={pass.externalPersonName}
+              />
+              <DataRow
+                icon={<Phone fontSize="small" />}
+                label="Contact"
+                value={pass.externalPersonPhone}
+              />
+              <DataRow
+                icon={<Email fontSize="small" />}
+                label="Visitor Email"
+                value={pass.externalPersonEmail}
+              />
             </Grid>
           </Box>
 
@@ -182,7 +276,12 @@ const PassDetails = ({ open, onClose, pass }) => {
                 borderTop: "1px solid #eee",
               }}
             >
-              <Typography variant="caption" fontWeight={700} color="text.secondary" mb={1}>
+              <Typography
+                variant="caption"
+                fontWeight={700}
+                color="text.secondary"
+                mb={1}
+              >
                 VISUAL ASSET VERIFICATION
               </Typography>
               <Box
@@ -204,7 +303,14 @@ const PassDetails = ({ open, onClose, pass }) => {
         </Stack>
       </DialogContent>
 
-      <DialogActions sx={{ p: 3, borderTop: "1px solid #eee", bgcolor: "#fcfcfc", gap: 2 }}>
+      <DialogActions
+        sx={{
+          p: 3,
+          borderTop: "1px solid #eee",
+          bgcolor: "#fcfcfc",
+          gap: 2,
+        }}
+      >
         {isApproved && (
           <Button
             fullWidth
@@ -226,7 +332,10 @@ const PassDetails = ({ open, onClose, pass }) => {
             fontWeight: 700,
             color: "#2c5364",
             borderColor: "#2c5364",
-            "&:hover": { borderColor: "#0f2027", bgcolor: "#f0f0f0" },
+            "&:hover": {
+              borderColor: "#0f2027",
+              bgcolor: "#f0f0f0",
+            },
           }}
         >
           CLOSE PREVIEW
@@ -240,14 +349,40 @@ const PassDetails = ({ open, onClose, pass }) => {
 const DataRow = ({ icon, label, value }) => (
   <Grid item xs={12} sm={6}>
     <Box sx={{ display: "flex", alignItems: "flex-start", mb: 1 }}>
-      <Box sx={{ mr: 1.5, mt: 0.5, p: 0.5, borderRadius: 1, bgcolor: "#f0f4f8", display: "flex", color: "#2c5364" }}>
+      <Box
+        sx={{
+          mr: 1.5,
+          mt: 0.5,
+          p: 0.5,
+          borderRadius: 1,
+          bgcolor: "#f0f4f8",
+          display: "flex",
+          color: "#2c5364",
+        }}
+      >
         {icon}
       </Box>
       <Box>
-        <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 600, textTransform: "uppercase", fontSize: "0.65rem" }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            fontSize: "0.65rem",
+          }}
+        >
           {label}
         </Typography>
-        <Typography variant="body1" sx={{ fontWeight: 700, color: "#2d3436", wordBreak: "break-word", lineHeight: 1.2 }}>
+        <Typography
+          variant="body1"
+          sx={{
+            fontWeight: 700,
+            color: "#2d3436",
+            wordBreak: "break-word",
+            lineHeight: 1.2,
+          }}
+        >
           {value || "—"}
         </Typography>
       </Box>

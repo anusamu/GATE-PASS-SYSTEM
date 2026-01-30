@@ -65,6 +65,7 @@ const Sidebar = ({
     ],
     admin: [
       { id: "dashboard", label: "Admin Dashboard", icon: <Dashboard /> },
+      { id: "adminhistory", label: "History", icon: <History /> },
     ],
     security: [
       { id: "dashboard", label: "Security Dashboard", icon: <Dashboard /> },
@@ -89,6 +90,7 @@ const Sidebar = ({
     "my-passes": "/dashboard/mypass",
     staffhistory: "/dashboard/history",
     hodhistory: "/hod/history",
+    adminhistory: "/admin/history",
     verified: "/security/verified",
     rejected: "/security/rejected",
   };
@@ -100,17 +102,19 @@ const Sidebar = ({
      ACTIVE TAB SYNC (NO UI CHANGE)
   ========================= */
   useEffect(() => {
-    const path = location.pathname;
+const path = location.pathname;
 
-    if (path.startsWith("/dashboard/history")) {
-      setActiveTab("staffhistory");
-    } else if (path.startsWith("/hod/history")) {
-      setActiveTab("hodhistory");
-    } else if (path.includes("/mypass")) {
-      setActiveTab("my-passes");
-    } else {
-      setActiveTab("dashboard");
-    }
+if (path.startsWith("/dashboard/history")) {
+  setActiveTab("staffhistory");
+} else if (path.startsWith("/hod/history")) {
+  setActiveTab("hodhistory");
+} else if (path.includes("/mypass")) {
+  setActiveTab("my-passes");
+} else if (path.startsWith("/admin/history")) {
+  setActiveTab("adminhistory");
+} else {
+  setActiveTab("dashboard");
+}
   }, [location.pathname, setActiveTab]);
 
   /* =========================

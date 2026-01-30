@@ -80,7 +80,7 @@ function AuthPage() {
         navigate("/hod");
         break;
       case "security":
-        navigate("/security");
+        navigate("/Security/Dashboard");
         break;
       case "staff":
         navigate("/dashboard");

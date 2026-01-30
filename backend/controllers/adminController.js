@@ -99,15 +99,12 @@ exports.createUser = async (req, res) => {
 ========================= */
 exports.approvedPassCount = async (req, res) => {
   try {
-    if (!ensureAdmin(req, res)) return;
-
     const count = await Pass.countDocuments({ status: "APPROVED" });
 
     res.status(200).json({
       success: true,
       count,
     });
-
   } catch (error) {
     console.error("Approved count error:", error.message);
     res.status(500).json({
@@ -116,6 +113,8 @@ exports.approvedPassCount = async (req, res) => {
     });
   }
 };
+
+
 exports.deleteUser = async (req, res) => {
   try {
     // role check (since adminOnly middleware is NOT used)
@@ -148,3 +147,24 @@ exports.deleteUser = async (req, res) => {
     });
   }
 };
+exports.getAllPassHistory = async (req, res) => {
+  try {
+    const { status } = req.query;
+
+    let filter = {};
+
+    if (status && ["APPROVED", "PENDING", "REJECTED"].includes(status)) {
+      filter.status = status;
+    }
+
+    const passes = await Pass.find(filter).sort({ createdAt: -1 });
+
+    res.status(200).json(passes);
+  } catch (error) {
+    console.error("Error fetching pass history:", error);
+    res.status(500).json({
+      message: "Failed to fetch pass history",
+    });
+  }
+};
+

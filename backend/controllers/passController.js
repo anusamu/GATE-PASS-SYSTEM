@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 const generatePassPDF = require("../utils/generatePassPDF");
 const path = require("path");
 const fs = require("fs");
+const QRCode = require("qrcode");
+const { v4: uuidv4 } = require("uuid");
 
 const isValidEmail = (email) =>
   typeof email === "string" &&
@@ -46,23 +48,23 @@ exports.createPass = async (req, res) => {
     }
 
     const pass = await Pass.create({
-      requester: req.user._id,
-      requesterName: req.user.name,
-      requesterEmail: req.user.email,
-      department: req.user.department,
-      hod: hod._id,
-      assetName,
-      assetSerialNo,
-      purpose,
-      externalPersonName,
-      externalPersonEmail,
-      externalPersonPhone,
-      passType,
-      returnDateTime: passType === "RETURNABLE" ? returnDateTime : null,
-      photo: req.file ? req.file.path : null,
-      status: "PENDING",
-    });
-
+  requester: req.user._id,
+  requesterName: req.user.name,
+  requesterEmail: req.user.email,
+  department: req.user.department,
+  hod: hod._id,
+  assetName,
+  assetSerialNo,
+  purpose,
+  externalPersonName,
+  externalPersonEmail,
+  externalPersonPhone,
+  passType,
+  returnDateTime: passType === "RETURNABLE" ? returnDateTime : null,
+  photo: req.file ? req.file.path : null,
+  status: "PENDING",
+  used: false,        // optional clarity
+});
     res.status(201).json(pass);
 
     const recipients = buildRecipients(hod.email);
@@ -185,11 +187,23 @@ exports.approvePass = async (req, res) => {
       return res.status(400).json({ message: `Already ${pass.status}` });
     }
 
-    pass.status = "APPROVED";
-    pass.approvedAt = new Date();
-    await pass.save();
+    /* ================== QR GENERATION ================== */
+    if (!pass.qrCode) {
+      const uniqueCode = uuidv4(); // UNIQUE PASS CODE
+      pass.qrCode = uniqueCode;
 
-    const recipients = buildRecipients(
+      // Optional: QR image (base64) if you want to show in email / card
+      const qrImage = await QRCode.toDataURL(uniqueCode);
+      pass.qrImage = qrImage; // add field if needed
+    }
+
+    pass.status = "APPROVED";
+    pass.used = false;
+    pass.approvedAt = new Date();
+
+    await pass.save();
+    /* =================================================== */
+ const recipients = buildRecipients(
       pass.requesterEmail,
       pass.externalPersonEmail
     );
@@ -246,7 +260,11 @@ exports.approvePass = async (req, res) => {
       ).catch(console.error);
     }
 
-    res.json({ message: "Gate pass approved", pass });
+
+    res.json({
+      message: "Gate pass approved & QR generated",
+      pass,
+    });
   } catch (error) {
     console.error("APPROVE PASS ERROR:", error);
     res.status(500).json({ message: "Server error" });
@@ -618,3 +636,5 @@ exports.viewPass = async (req, res) => {
     res.status(500).send("<h2>Server error</h2>");
   }
 };
+
+

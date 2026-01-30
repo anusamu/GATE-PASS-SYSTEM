@@ -13,6 +13,8 @@ import HodHistory from "./pages/HodHistory";
 import AdminDashboard from "./pages/AdminDashboard";
 
 import RoleRoute from "./routes/RoleRoute";
+import Adminhistory from "./pages/Adminhistory";
+import SecurityDashboard from "./pages/SecurityDashboard";
 
 function App() {
   return (
@@ -57,8 +59,23 @@ function App() {
             </RoleRoute>
           }
         >
-          <Route index element={<AdminDashboard />} />
+          <Route index element={<AdminDashboard/>} />
+          <Route path="history" element={<Adminhistory/>} />
         </Route>
+
+    <Route
+          path="/Security/Dashboard"
+          element={
+            <RoleRoute role="security">
+              <DashboardLayout />
+            </RoleRoute>
+          }
+        >
+          <Route index element={<SecurityDashboard />} />
+         
+        </Route>
+
+
       </Routes>
     </BrowserRouter>
   );

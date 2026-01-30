@@ -3,6 +3,10 @@ const router = express.Router();
 
 // Import Controllers
 const {
+  verifyQRCode,
+  markPassAsUsed,
+} = require("../controllers/SecurityController");
+const {
   login,
   staffRegister,
   getMyProfile,
@@ -20,6 +24,8 @@ const {
   getHistory,
   createPassHod,
   downloadPass,
+ 
+  
 } = require("../controllers/passController");
 
 // Import Middleware
@@ -32,6 +38,7 @@ const {
   createUser,
   approvedPassCount,
   deleteUser,
+  getAllPassHistory,
 } = require("../controllers/adminController");
 
 // --- Auth Routes ---
@@ -84,5 +91,17 @@ router.get("/users", protect, getUsers);
 router.post("/create-user", protect, createUser);
 router.get("/passes/approved/count", protect, approvedPassCount);
 router.delete("/user/:id", protect, deleteUser);
+router.get("/admin/pass", getAllPassHistory);
+
+
+
+
+
+
+
+router.post("/verify-qr", verifyQRCode);
+router.put("/mark-used/:id", markPassAsUsed);
+
+
 
 module.exports = router;

@@ -71,23 +71,22 @@ const PassCard = ({ pass, onApprove, onReject, role }) => {
             )}
 
             {/* QR CODE (ONLY IF APPROVED) */}
-            {isApproved && (
-              <>
-                <Divider sx={{ my: 2 }} />
-                <Box textAlign="center">
-                  <Typography fontWeight={700} mb={1}>
-                    Security QR Code
-                  </Typography>
-                  <QRCode
-                    size={140}
-                    value={JSON.stringify({
-                      passId: pass._id,
-                      valid: true,
-                    })}
-                  />
-                </Box>
-              </>
-            )}
+   {isApproved && pass.qrCode && (
+  <>
+    <Divider sx={{ my: 2 }} />
+    <Box textAlign="center">
+      <Typography fontWeight={700} mb={1}>
+        Security QR Code
+      </Typography>
+
+      {/* ✅ REAL WORKING QR CODE */}
+      <QRCode
+        size={140}
+        value={pass.qrCode}
+      />
+    </Box>
+  </>
+)}
 
             {/* ACTIONS */}
             <Divider sx={{ my: 2 }} />

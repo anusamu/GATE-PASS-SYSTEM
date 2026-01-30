@@ -21,8 +21,6 @@ import {
 
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import Sidebar from "../components/SideBar";
-import Navbar from "../components/Navbar";
 import AddUserDialog from "../components/AddUser";
 
 const API = "https://gate-pass-system-drti.onrender.com" ;
@@ -36,9 +34,7 @@ const AdminDashboard = () => {
   /* =======================
      SIDEBAR STATE
   ======================= */
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  
 
   /* =======================
      DATA STATE
