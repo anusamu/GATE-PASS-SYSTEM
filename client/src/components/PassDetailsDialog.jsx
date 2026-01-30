@@ -120,7 +120,7 @@ const PassDetails = ({ open, onClose, pass }) => {
               justifyContent: { xs: "flex-start", sm: "flex-end" },
             }}
           >
-            {isApproved && (
+           {isApproved && pass.qrCode && (
               <Box
                 sx={{
                   bgcolor: "white",
@@ -130,15 +130,10 @@ const PassDetails = ({ open, onClose, pass }) => {
                   textAlign: "center",
                 }}
               >
-                <QRCode
-                  size={100}
-                  value={JSON.stringify({ passId: pass._id })}
-                  style={{
-                    height: "auto",
-                    maxWidth: "100%",
-                    width: "100%",
-                  }}
-                />
+             <QRCode
+                    size={140}
+                    value={pass.qrCode}
+                  />
                 <Typography
                   variant="caption"
                   display="block"
@@ -153,6 +148,7 @@ const PassDetails = ({ open, onClose, pass }) => {
                 </Typography>
               </Box>
             )}
+             
           </Grid>
         </Grid>
       </Box>

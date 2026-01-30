@@ -27,3 +27,4 @@ exports.markPassAsUsed = async (req, res) => {
   await Pass.findByIdAndUpdate(req.params.id, { used: true });
   res.json({ message: "Entry marked successfully" });
 };
+
