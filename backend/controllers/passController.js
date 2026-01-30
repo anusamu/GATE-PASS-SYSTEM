@@ -7,7 +7,7 @@ const path = require("path");
 const fs = require("fs");
 const QRCode = require("qrcode");
 const { v4: uuidv4 } = require("uuid");
-const QRCode = require("qrcode");
+
 
 const isValidEmail = (email) =>
   typeof email === "string" &&
@@ -544,16 +544,29 @@ exports.downloadPass = async (req, res) => {
 /* =====================================================
    VIEW PASS DETAILS (HTML PAGE)
 ===================================================== */
+
 exports.viewPass = async (req, res) => {
   try {
     const pass = await Pass.findById(req.params.id);
 
+    // ✅ Security check
     if (!pass || pass.status !== "APPROVED") {
-      return res.status(404).send("<h2>Pass not found or not approved</h2>");
+      return res
+        .status(404)
+        .send("<h2>Pass not found or not approved</h2>");
     }
 
-    const pdfUrl = `${process.env.BACKEND_URL}/pass/download/${pass._id}`;
+    // ✅ PDF URL
+    const pdfUrl = `${process.env.BACKEND_URL}/pass/download/${encodeURIComponent(
+      pass._id
+    )}`;
 
+    // ✅ Generate QR (backend – email/print safe)
+    const qrImage = pass.qrCode
+      ? await QRCode.toDataURL(pass.qrCode)
+      : "";
+
+    // ✅ Send HTML
     res.send(`
 <!DOCTYPE html>
 <html lang="en">
@@ -564,25 +577,28 @@ exports.viewPass = async (req, res) => {
 <style>
   body { font-family: Arial, sans-serif; background:#f2f4f7; padding:20px }
   .dialog { max-width:900px; margin:auto; background:#fff; border-radius:16px; overflow:hidden }
-  .header { background:linear-gradient(135deg,#2563eb,#22c55e); color:#fff; padding:30px; display:flex; justify-content:space-between }
-  .logo-box { background:#fff; padding:6px 10px; border-radius:6px }
-  .status { background:#00c853; padding:6px 20px; border-radius:20px; font-weight:bold }
+  .header { background:linear-gradient(135deg,#2563eb,#22c55e); color:#fff; padding:30px; display:flex; justify-content:space-between; align-items:center }
+  .logo-box { background:#fff; padding:6px 10px; border-radius:6px; display:inline-block }
+  .status { background:#00c853; padding:6px 20px; border-radius:20px; font-weight:bold; display:inline-block; margin-top:8px }
   .qr-box { background:#fff; padding:10px; border-radius:12px; text-align:center }
   .content { padding:30px }
   .label { font-size:10px; text-transform:uppercase; color:#6b7280 }
   .value { font-weight:700 }
   .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px }
   .photo-section { text-align:center; margin-top:30px }
+  hr { border:none; border-top:1px solid #eee; margin:25px 0 }
+  a { color:#2563eb; font-weight:bold; text-decoration:none }
 </style>
 </head>
 
 <body>
 <div class="dialog">
 
+  <!-- HEADER -->
   <div class="header">
     <div>
       <div class="logo-box">
-        <img src="https://gate-pass-system-kappa.vercel.app/tp-logo.png" width="160"/>
+        <img src="https://gate-pass-system-kappa.vercel.app/tp-logo.png" width="160" alt="Technopark"/>
       </div>
       <h2>GATE PASS</h2>
       <div>Verification ID: ${pass._id}</div>
@@ -592,13 +608,14 @@ exports.viewPass = async (req, res) => {
     ${
       qrImage
         ? `<div class="qr-box">
-            <img src="${qrImage}" width="140" />
+            <img src="${qrImage}" width="140" alt="QR Code"/>
             <div style="font-size:10px;font-weight:bold">SCAN VALIDATION</div>
           </div>`
         : ""
     }
   </div>
 
+  <!-- CONTENT -->
   <div class="content">
 
     <h4>REQUESTER INFORMATION</h4>
@@ -615,12 +632,16 @@ exports.viewPass = async (req, res) => {
     <div class="grid">
       <div><div class="label">Asset</div><div class="value">${pass.assetName}</div></div>
       <div><div class="label">Serial</div><div class="value">${pass.assetSerialNo}</div></div>
-      <div><div class="label">Out Date</div><div class="value">${pass.outDate}</div></div>
+      <div><div class="label">Out Date</div><div class="value">${new Date(
+        pass.outDate
+      ).toLocaleDateString()}</div></div>
     </div>
 
     ${
       pass.passType === "RETURNABLE"
-        ? `<p><b>Return Date:</b> ${new Date(pass.returnDateTime).toLocaleString()}</p>`
+        ? `<p><b>Return Date:</b> ${new Date(
+            pass.returnDateTime
+          ).toLocaleString()}</p>`
         : ""
     }
 
@@ -637,7 +658,7 @@ exports.viewPass = async (req, res) => {
       pass.photo
         ? `<div class="photo-section">
             <div class="label">Visual Asset Verification</div><br/>
-            <img src="${pass.photo}" style="max-width:350px;border-radius:12px"/>
+            <img src="${pass.photo}" style="max-width:350px;border-radius:12px" alt="Asset Photo"/>
           </div>`
         : ""
     }
@@ -651,11 +672,8 @@ exports.viewPass = async (req, res) => {
 </body>
 </html>
 `);
-
   } catch (error) {
     console.error("VIEW PASS ERROR:", error);
     res.status(500).send("<h2>Server error</h2>");
   }
 };
-
-
