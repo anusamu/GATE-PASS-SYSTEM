@@ -48,11 +48,12 @@ const AddUserDialog = ({
             fullWidth
           >
             <MenuItem value="hod">HOD</MenuItem>
-            <MenuItem value="admin">Admin</MenuItem>
-            <MenuItem value="security">Security</MenuItem>
+            <MenuItem value="staff">STAFF</MenuItem>
+            <MenuItem value="admin">ADMIN</MenuItem>
+            <MenuItem value="security">SECURITY</MenuItem>
           </TextField>
 
-          {formData.role === "hod" && (
+          {(formData.role === "hod" || formData.role === "staff") && (
             <TextField
               select
               label="Department"
@@ -61,14 +62,14 @@ const AddUserDialog = ({
               onChange={handleChange}
               fullWidth
             >
-                  <MenuItem value="IT">IT</MenuItem>
-                                  <MenuItem value="Admin">ADMIN</MenuItem>
-                                  <MenuItem value="Finance">FINANCE</MenuItem>
-                                  <MenuItem value="crm">CRM</MenuItem>
-                                   <MenuItem value="legal">LEGAL</MenuItem>
-                                   <MenuItem value="electrical">ELECTRICAL</MenuItem>
-                                   <MenuItem value="mep">MEP</MenuItem>
-                                   <MenuItem value="civil">CIVIL</MenuItem>
+              <MenuItem value="IT">IT</MenuItem>
+              <MenuItem value="Admin">ADMIN</MenuItem>
+              <MenuItem value="Finance">FINANCE</MenuItem>
+              <MenuItem value="crm">CRM</MenuItem>
+              <MenuItem value="legal">LEGAL</MenuItem>
+              <MenuItem value="electrical">ELECTRICAL</MenuItem>
+              <MenuItem value="mep">MEP</MenuItem>
+              <MenuItem value="civil">CIVIL</MenuItem>
             </TextField>
           )}
 
@@ -94,7 +95,8 @@ const AddUserDialog = ({
             !formData.email ||
             !formData.role ||
             !formData.password ||
-            (formData.role === "hod" && !formData.department)
+            ((formData.role === "hod" || formData.role === "staff") &&
+              !formData.department)
           }
         >
           Create User

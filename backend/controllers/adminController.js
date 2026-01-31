@@ -63,14 +63,14 @@ exports.createUser = async (req, res) => {
     // ⚠️ IMPORTANT:
     // Do NOT hash password here
     // Schema pre-save hook will hash it
-    const newUser = await User.create({
-      name,
-      email,
-      password, // plain password (auto-hashed)
-      role,
-      department: role === "hod" ? department : undefined,
-      phone,
-    });
+   const newUser = await User.create({
+  name,
+  email,
+  password, // plain password (auto-hashed)
+  role,
+  department: role === "hod" || role === "staff" ? department : undefined,
+  phone,
+});
 
     res.status(201).json({
       success: true,
