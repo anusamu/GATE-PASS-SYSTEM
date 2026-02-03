@@ -181,7 +181,7 @@ exports.forgotPassword = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     // 🔗 FRONTEND reset link
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.APP_URL}/reset-password/${resetToken}`;
 
     const htmlContent = `
       <h3>Password Reset Request</h3>
