@@ -182,16 +182,79 @@ exports.forgotPassword = async (req, res) => {
 
     // 🔗 FRONTEND reset link
     const resetUrl = `${process.env.APP_URL}/reset-password/${resetToken}`;
+const htmlContent = `
+<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    
+    <!-- HEADER -->
+    <div style="background: linear-gradient(135deg, #048cedff 0%, #09f097ff 100%); padding: 30px; text-align: center;">
+      <img 
+        src="https://gate-pass-system-kappa.vercel.app/tp-logo.png"
+        alt="Gate Pass System"
+        style="width:180px; filter:brightness(0) invert(1);"
+      />
+    </div>
 
-    const htmlContent = `
-      <h3>Password Reset Request</h3>
-      <p>Hello ${user.name},</p>
-      <p>You requested a password reset.</p>
-      <p>Click the link below to reset your password:</p>
-      <a href="${resetUrl}">${resetUrl}</a>
-      <p><b>This link will expire in 15 minutes.</b></p>
-      <p>If you did not request this, please ignore this email.</p>
-    `;
+    <!-- BODY -->
+    <div style="padding: 40px 30px;">
+      <h2 style="color: #333; margin-top: 0; font-size: 24px; font-weight: 800;">
+        Password Reset Request
+      </h2>
+      
+      <p style="color: #555; font-size: 16px;">
+        Hello <strong>${user.name}</strong>,
+      </p>
+      
+      <p style="color: #555; font-size: 16px;">
+        We received a request to reset your account password for the 
+        <strong>Gate Pass System</strong>.
+      </p>
+
+      <div style="background-color: #f8fafb; border-radius: 8px; padding: 20px; border-left: 4px solid #007cf0; margin: 25px 0;">
+        <p style="margin: 0; font-size: 15px; color: #333;">
+          Click the button below to securely reset your password.
+        </p>
+      </div>
+
+      <!-- BUTTON -->
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="${resetUrl}" 
+           style="background: linear-gradient(135deg, #007cf0 0%, #00dfd8 100%); 
+                  color: white; 
+                  padding: 14px 32px; 
+                  text-decoration: none; 
+                  border-radius: 6px; 
+                  font-weight: bold; 
+                  display: inline-block;
+                  box-shadow: 0 4px 10px rgba(0,124,240,0.3);">
+            Reset Password
+        </a>
+      </div>
+
+      <p style="margin-top: 30px; color: #666; font-size: 14px;">
+        ⏳ <strong>This link will expire in 15 minutes.</strong>
+      </p>
+
+      <p style="color: #888; font-size: 14px;">
+        If you did not request a password reset, please ignore this email.  
+        Your account will remain secure.
+      </p>
+
+      <p style="margin-top: 40px; color: #888; font-size: 14px;">
+        Regards,<br/>
+        <strong style="color: #333;">Gate Pass System Support Team</strong>
+      </p>
+    </div>
+    
+    <!-- FOOTER -->
+    <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #999;">
+      This is an automated message. Please do not reply to this email.
+    </div>
+  </div>
+</div>
+`;
+
+    
 
     // ✅ IMPORTANT: recipients MUST be an ARRAY
     await sendMail(

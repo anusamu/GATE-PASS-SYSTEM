@@ -247,9 +247,9 @@ function AuthPage() {
                     Forgot Password?
                   </Button>
 
-                  <Button onClick={() => setMode("signup")}>
+                  {/* <Button onClick={() => setMode("signup")}>
                     New Staff? Create Account
-                  </Button>
+                  </Button> */}
                 </Stack>
               </form>
             )}
