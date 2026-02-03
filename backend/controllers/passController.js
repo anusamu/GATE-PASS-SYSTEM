@@ -258,7 +258,7 @@ exports.approvePass = async (req, res) => {
   </div>
 </div>
     `  , [
-      approver.email,           // ✅ CC example
+               // ✅ CC example
        "happyeboy369@gmail.com"  // ✅ multiple CC allowed
     ]
       ).catch(console.error);
