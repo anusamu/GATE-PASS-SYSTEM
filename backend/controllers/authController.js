@@ -1,7 +1,8 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-
+const sendMail = require("../utils/sendMail");
+const crypto = require("crypto");
 /* =========================
    TOKEN GENERATOR
 ========================= */
@@ -143,5 +144,83 @@ exports.getMyProfile = async (req, res) => {
   } catch (error) {
     console.error("Get profile error:", error);
     res.status(500).json({ message: "Failed to fetch profile" });
+  }
+};
+
+
+
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 mins
+
+    await user.save();
+
+    const resetUrl = `${process.env.APP_URL}/reset-password/${resetToken}`;
+
+    const message = `
+      <h3>Password Reset</h3>
+      <p>Click below to reset your password</p>
+      <a href="${resetUrl}">${resetUrl}</a>
+      <p>This link is valid for 15 minutes</p>
+    `;
+
+    await sendEmail({
+      to: user.email,
+      subject: "Reset Your Password",
+      html: message
+    });
+
+    res.json({ message: "Password reset link sent to email" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    user.password = password; // will auto-hash via pre-save
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.json({ message: "Password reset successful" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

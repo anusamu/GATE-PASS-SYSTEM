@@ -15,6 +15,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import RoleRoute from "./routes/RoleRoute";
 import Adminhistory from "./pages/Adminhistory";
 import SecurityDashboard from "./pages/SecurityDashboard";
+import ResetPassword from "./components/ResetPassword";
 
 function App() {
   return (
@@ -74,7 +75,7 @@ function App() {
           <Route index element={<SecurityDashboard />} />
          
         </Route>
-
+<Route path="/reset-password/:token" element={<ResetPassword/>} />
 
       </Routes>
     </BrowserRouter>

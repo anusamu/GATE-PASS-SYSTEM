@@ -11,6 +11,8 @@ const {
   staffRegister,
   getMyProfile,
   createUserByAdmin,
+    forgotPassword,
+  resetPassword
 } = require("../controllers/authController");
 
 const {
@@ -101,6 +103,14 @@ router.get("/admin/pass", getAllPassHistory);
 
 router.post("/verify-qr", verifyQRCode);
 router.put("/mark-used/:id", markPassAsUsed);
+
+
+
+
+
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
+
 
 
 

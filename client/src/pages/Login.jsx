@@ -17,8 +17,6 @@ import SecurityIcon from "@mui/icons-material/Security";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-
-// const API = "https://gate-pass-system-drti.onrender.com" || "http://localhost:5000/"
 const API =
   import.meta.env.MODE === "production"
     ? "https://gate-pass-system-drti.onrender.com"
@@ -29,7 +27,7 @@ const GRADIENT = "linear-gradient(135deg,#2563eb,#22c55e)";
 function AuthPage() {
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState("login"); // login | signup | forgot
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
 
@@ -45,53 +43,53 @@ function AuthPage() {
     department: "",
   });
 
+  const [forgotEmail, setForgotEmail] = useState("");
+
   // ================= LOGIN =================
   const handleLogin = async (e) => {
-  e.preventDefault();
-  setError(null);
-  setMessage(null);
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
 
-  try {
-    const res = await axios.post(`${API}/login`, loginData);
+    try {
+      const res = await axios.post(`${API}/login`, loginData);
 
-    const { token, role, name, department, email } = res.data;
+      const { token, role, name, department, email } = res.data;
 
-    // ✅ SINGLE SOURCE OF TRUTH
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        name,
-        email,
-        department,
-        role: role.toLowerCase(),
-      })
-    );
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          name,
+          email,
+          department,
+          role: role.toLowerCase(),
+        })
+      );
 
-    localStorage.setItem("token", token);
+      localStorage.setItem("token", token);
 
-    setMessage("Login successful");
+      setMessage("Login successful");
 
-    // ✅ REDIRECT BY ROLE
-    switch (role.toLowerCase()) {
-      case "admin":
-        navigate("/admin");
-        break;
-      case "hod":
-        navigate("/hod");
-        break;
-      case "security":
-        navigate("/Security/Dashboard");
-        break;
-      case "staff":
-        navigate("/dashboard");
-        break;
-      default:
-        navigate("/");
+      switch (role.toLowerCase()) {
+        case "admin":
+          navigate("/admin");
+          break;
+        case "hod":
+          navigate("/hod");
+          break;
+        case "security":
+          navigate("/Security/Dashboard");
+          break;
+        case "staff":
+          navigate("/dashboard");
+          break;
+        default:
+          navigate("/");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid email or password");
     }
-  } catch (err) {
-    setError(err.response?.data?.message || "Invalid email or password");
-  }
-};
+  };
 
   // ================= SIGNUP =================
   const handleSignup = async (e) => {
@@ -108,10 +106,25 @@ function AuthPage() {
     }
   };
 
+  // ================= FORGOT PASSWORD =================
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setMessage(null);
+
+    try {
+      const res = await axios.post(`${API}/forgot-password`, {
+        email: forgotEmail,
+      });
+
+      setMessage(res.data.message || "Reset link sent to your email");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to send reset link");
+    }
+  };
+
   return (
-  
-  
-<Box
+    <Box
       minHeight="100vh"
       display="flex"
       alignItems="center"
@@ -160,12 +173,12 @@ function AuthPage() {
               Gate Pass System
             </Typography>
 
-            <Typography
-              variant="caption"
-              fontWeight={700}
-              sx={{ opacity: 0.9 }}
-            >
-              {mode === "login" ? "SECURE LOGIN" : "STAFF REGISTRATION"}
+            <Typography variant="caption" fontWeight={700}>
+              {mode === "login"
+                ? "SECURE LOGIN"
+                : mode === "signup"
+                ? "STAFF REGISTRATION"
+                : "RESET PASSWORD"}
             </Typography>
           </Box>
 
@@ -177,7 +190,8 @@ function AuthPage() {
 
           {/* FORMS */}
           <Box p={4}>
-            {mode === "login" ? (
+            {/* LOGIN */}
+            {mode === "login" && (
               <form onSubmit={handleLogin}>
                 <Stack spacing={3}>
                   <TextField
@@ -203,7 +217,10 @@ function AuthPage() {
                     placeholder="Password"
                     value={loginData.password}
                     onChange={(e) =>
-                      setLoginData({ ...loginData, password: e.target.value })
+                      setLoginData({
+                        ...loginData,
+                        password: e.target.value,
+                      })
                     }
                     InputProps={{
                       startAdornment: (
@@ -226,12 +243,53 @@ function AuthPage() {
                     LOGIN
                   </Button>
 
+                  <Button onClick={() => setMode("forgot")}>
+                    Forgot Password?
+                  </Button>
+
                   <Button onClick={() => setMode("signup")}>
                     New Staff? Create Account
                   </Button>
                 </Stack>
               </form>
-            ) : (
+            )}
+
+            {/* FORGOT PASSWORD */}
+            {mode === "forgot" && (
+              <form onSubmit={handleForgotPassword}>
+                <Stack spacing={3}>
+                  <TextField
+                    fullWidth
+                    required
+                    type="email"
+                    placeholder="Enter registered email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                  />
+
+                  <Button
+                    type="submit"
+                    fullWidth
+                    sx={{
+                      py: 1.6,
+                      borderRadius: "1.25rem",
+                      background: GRADIENT,
+                      fontWeight: 900,
+                      color: "#fff",
+                    }}
+                  >
+                    SEND RESET LINK
+                  </Button>
+
+                  <Button onClick={() => setMode("login")}>
+                    Back to Login
+                  </Button>
+                </Stack>
+              </form>
+            )}
+
+            {/* SIGNUP */}
+            {mode === "signup" && (
               <form onSubmit={handleSignup}>
                 <Stack spacing={3}>
                   <TextField
@@ -277,13 +335,13 @@ function AuthPage() {
                     }
                   >
                     <MenuItem value="IT">IT</MenuItem>
-                    <MenuItem value="HR">ADMIN</MenuItem>
-                    <MenuItem value="Admin">FINANCE</MenuItem>
-                    <MenuItem value="Security">CRM</MenuItem>
-                     <MenuItem value="Security">LEGAL</MenuItem>
-                     <MenuItem value="Security">ELECTRICAL</MenuItem>
-                     <MenuItem value="Security">MEP</MenuItem>
-                     <MenuItem value="Security">CIVIL</MenuItem>
+                    <MenuItem value="ADMIN">ADMIN</MenuItem>
+                    <MenuItem value="FINANCE">FINANCE</MenuItem>
+                    <MenuItem value="CRM">CRM</MenuItem>
+                    <MenuItem value="LEGAL">LEGAL</MenuItem>
+                    <MenuItem value="ELECTRICAL">ELECTRICAL</MenuItem>
+                    <MenuItem value="MEP">MEP</MenuItem>
+                    <MenuItem value="CIVIL">CIVIL</MenuItem>
                   </TextField>
 
                   <Button
@@ -310,8 +368,6 @@ function AuthPage() {
         </Paper>
       </Box>
     </Box>
-  
-    
   );
 }
 
