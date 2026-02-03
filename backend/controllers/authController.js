@@ -150,16 +150,25 @@ exports.getMyProfile = async (req, res) => {
 
 
 
+
+
+
+
+
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
 
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Generate token
+    // 🔐 Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
 
     user.resetPasswordToken = crypto
@@ -167,30 +176,43 @@ exports.forgotPassword = async (req, res) => {
       .update(resetToken)
       .digest("hex");
 
-    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 mins
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
 
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
-    const resetUrl = `${process.env.APP_URL}/reset-password/${resetToken}`;
+    // 🔗 FRONTEND reset link
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-    const message = `
-      <h3>Password Reset</h3>
-      <p>Click below to reset your password</p>
+    const htmlContent = `
+      <h3>Password Reset Request</h3>
+      <p>Hello ${user.name},</p>
+      <p>You requested a password reset.</p>
+      <p>Click the link below to reset your password:</p>
       <a href="${resetUrl}">${resetUrl}</a>
-      <p>This link is valid for 15 minutes</p>
+      <p><b>This link will expire in 15 minutes.</b></p>
+      <p>If you did not request this, please ignore this email.</p>
     `;
 
-    await sendEmail({
-      to: user.email,
-      subject: "Reset Your Password",
-      html: message
+    // ✅ IMPORTANT: recipients MUST be an ARRAY
+    await sendMail(
+      [user.email],                 // recipients
+      "Reset Your Password",         // subject
+      htmlContent                    // htmlContent
+    );
+
+    return res.status(200).json({
+      message: "Password reset link sent to email",
     });
 
-    res.json({ message: "Password reset link sent to email" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("FORGOT PASSWORD ERROR:", err);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: err.message,
+    });
   }
 };
+
 
 
 
