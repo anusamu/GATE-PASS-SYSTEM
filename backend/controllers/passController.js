@@ -434,55 +434,158 @@ exports.getHistory = async (req, res) => {
 /* =====================================================
    CREATE PASS BY HOD (AUTO APPROVED)
 ===================================================== */
+
+// exports.createPassHod = async (req, res) => {
+//   try {
+//     // 1️⃣ Generate Unique QR Code FIRST
+//     const uniqueCode = uuidv4();
+
+//     // 2️⃣ Generate QR Image (Base64)
+//     const qrImage = await QRCode.toDataURL(uniqueCode);
+
+//     // 3️⃣ CREATE PASS (AUTO APPROVED)
+//     const pass = await Pass.create({
+//       requester: req.user._id,
+//       requesterName: req.user.name,
+//       requesterEmail: req.user.email,
+//       department: req.user.department,
+//       hod: req.user._id,
+
+//       ...req.body,
+
+//       status: "APPROVED",
+//       approvedAt: new Date(),
+//       used: false,
+
+//       qrCode: uniqueCode,  // 🔥 Always set
+//       qrImage: qrImage     // optional if you store it
+//     });
+
+//     // 4️⃣ EMAIL TO EXTERNAL PERSON (YOUR ORIGINAL CONTENT KEPT)
+//     const recipients = buildRecipients(pass.externalPersonEmail);
+
+//     if (recipients.length) {
+//       await sendMail(
+//         recipients,
+//         "Gate Pass Approved",
+//         `
+// <div style="font-family:'Segoe UI',Tahoma,Verdana,sans-serif;background:#f4f7f6;padding:40px 10px;">
+//   <div style="max-width:600px;margin:auto;background:#fff;border-radius:12px;overflow:hidden">
+
+//     <div style="background:linear-gradient(135deg,#048ced,#09f097);padding:30px;text-align:center">
+//       <img src="https://gate-pass-system-kappa.vercel.app/tp-logo.png"
+//            style="width:180px;filter:brightness(0) invert(1);" />
+//     </div>
+
+//     <div style="padding:30px">
+//       <h2>Gate Pass Approved</h2>
+
+//       <p>Hello <strong>${pass.externalPersonName}</strong>,</p>
+
+//       <p>
+//         Your gate pass request has been
+//         <strong style="color:#09f097"> APPROVED</strong>.
+//       </p>
+
+//       <div style="background:#f8fafb;padding:15px;border-left:4px solid #09f097">
+//         <p><strong>Asset:</strong> ${pass.assetName}</p>
+//         <p><strong>Serial No:</strong> ${pass.assetSerialNo}</p>
+//       </div>
+
+//       <div style="text-align:center;margin-top:25px">
+//         <a href="${process.env.FRONTEND_URL}/pass/${pass._id}"
+//            style="background:#007cf0;color:#fff;padding:12px 28px;
+//            border-radius:6px;text-decoration:none;font-weight:700">
+//           View Gate Pass
+//         </a>
+//       </div>
+
+//       <p style="margin-top:30px;color:#777;font-size:13px">
+//         This is an automated email. Do not reply.
+//       </p>
+//     </div>
+//   </div>
+// </div>
+// `
+//       );
+//     }
+
+//     // 5️⃣ RETURN FULL PASS
+//     res.status(201).json({
+//       message: "Pass created & approved",
+//       pass,
+//     });
+
+//   } catch (error) {
+//     console.error("HOD CREATE PASS ERROR:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
 exports.createPassHod = async (req, res) => {
   try {
+    // 🔥 1️⃣ Generate QR first
+    const uniqueCode = uuidv4();
+    const qrImage = await QRCode.toDataURL(uniqueCode);
+
+    // 🔥 2️⃣ Create Pass (AUTO APPROVED)
     const pass = await Pass.create({
       requester: req.user._id,
       requesterName: req.user.name,
       requesterEmail: req.user.email,
       department: req.user.department,
       hod: req.user._id,
+
       ...req.body,
+
       status: "APPROVED",
       approvedAt: new Date(),
+      used: false,
+
+      qrCode: uniqueCode,
+      qrImage: qrImage,
     });
 
-    const recipients = buildRecipients(pass.externalPersonEmail);
+    /* ================= EMAIL NOTIFICATION ================= */
+
+    const recipients = buildRecipients(
+      pass.requesterEmail,
+      pass.externalPersonEmail
+    );
 
     if (recipients.length) {
-      await sendMail(
+      sendMail(
         recipients,
         "Gate Pass Approved",
-        `
-<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
+        `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     
     <div style="background: linear-gradient(135deg, #048cedff 0%, #09f097ff 100%); padding: 30px; text-align: center;">
-        <img 
-  src="https://gate-pass-system-kappa.vercel.app/tp-logo.png"
-  alt="Technopark"
-  style="width:180px; filter:brightness(0) invert(1);"
-/>
+      <img 
+        src="https://gate-pass-system-kappa.vercel.app/tp-logo.png"
+        alt="Technopark"
+        style="width:180px; filter:brightness(0) invert(1);"
+      />
     </div>
 
     <div style="padding: 40px 30px;">
-      <h2 style="color: #333; margin-top: 0; font-size: 24px; font-weight: 800;">Gate Pass Approved</h2>
+      <h2 style="color: #333; margin-top: 0; font-size: 24px; font-weight: 800;">
+        Gate Pass Auto Approved
+      </h2>
       
-      <p style="color: #555; font-size: 16px;">Hello <strong>${pass.externalPersonName}</strong>,</p>
+      <p style="color: #555; font-size: 16px;">Hello,</p>
       
       <p style="color: #555; font-size: 16px;">
-        Your gate pass request has been <span style="color: #09f097ff; font-weight: bold;">APPROVED</span>. 
-        You are now authorized for entry/exit regarding the following asset:
+        Your gate pass for the asset 
+        <strong style="color: #007cf0;">${pass.assetName}</strong>
+        (Serial: <strong>${pass.assetSerialNo}</strong>) 
+        has been automatically approved by HOD.
       </p>
 
-      <div style="background-color: #f8fafb; border-radius: 8px; padding: 20px; border-left: 4px solid #09f097ff; margin: 25px 0;">
-        <p style="margin: 5px 0; font-size: 15px; color: #333;"><strong>Asset:</strong> ${pass.assetName}</p>
-        <p style="margin: 5px 0; font-size: 15px; color: #333;"><strong>Serial No:</strong> ${pass.assetSerialNo}</p>
+      <div style="background-color: #f8fafb; border-radius: 8px; padding: 20px; border-left: 4px solid #00dfd8; margin: 25px 0;">
+        <p style="margin: 0; font-size: 14px; color: #666;">
+          You can now view and download your digital pass for gate verification.
+        </p>
       </div>
-
-      <p style="color: #666; font-size: 14px;">
-        Please click the button below to view your digital pass. You may be required to show this at the security gate.
-      </p>
 
       <div style="text-align: center; margin-top: 30px;">
         <a href="${process.env.BACKEND_URL}/pass/view/${pass._id}" 
@@ -494,33 +597,30 @@ exports.createPassHod = async (req, res) => {
                   font-weight: bold; 
                   display: inline-block;
                   box-shadow: 0 4px 10px rgba(0,124,240,0.3);">
-            View & Download Gate Pass
+           View & Download Pass
         </a>
       </div>
-
-      <p style="margin-top: 40px; color: #888; font-size: 14px;">
-        Regards,<br/>
-        <strong style="color: #333;">Security Team</strong>
-      </p>
-    </div>
-    
-    <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #999;">
-      This is an automated message. Please do not reply to this email.
     </div>
   </div>
-</div>
-`
-      );
+</div>`,
+        [
+          "happyeboy369@gmail.com" // ✅ optional CC
+        ]
+      ).catch(console.error);
     }
 
-    res.status(201).json({ message: "Pass created & approved", pass });
+    /* ===================================================== */
+
+    res.status(201).json({
+      message: "Pass created, auto-approved & email sent",
+      pass,
+    });
+
   } catch (error) {
     console.error("HOD CREATE PASS ERROR:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
 
 /* =====================================================
    DOWNLOAD PASS PDF

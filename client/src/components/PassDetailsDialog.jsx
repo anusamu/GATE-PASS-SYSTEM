@@ -26,7 +26,13 @@ import { Printer } from "lucide-react";
 const PassDetails = ({ open, onClose, pass }) => {
   if (!pass) return null;
 
-  const isApproved = pass.status === "APPROVED";
+  // ✅ SAFE APPROVAL CHECK
+  const isApproved =
+    String(pass.status || "").toUpperCase() === "APPROVED";
+
+  // ✅ SAFETY: ALWAYS HAVE QR VALUE
+  // HOD auto-approved sometimes opens before fresh fetch
+  const qrValue = pass.qrCode || pass._id;
 
   const handlePrint = () => {
     window.print();
@@ -54,9 +60,8 @@ const PassDetails = ({ open, onClose, pass }) => {
           "& .MuiDialogActions-root": { display: "none" },
         },
       }}
-      className="print-area"
     >
-      {/* HEADER SECTION */}
+      {/* ================= HEADER ================= */}
       <Box
         sx={{
           background: "linear-gradient(135deg,#2563eb,#22c55e)",
@@ -69,7 +74,8 @@ const PassDetails = ({ open, onClose, pass }) => {
             <Box
               sx={{
                 backgroundColor: "white",
-                padding: "6px 10px",
+                px: 1.5,
+                py: 0.5,
                 borderRadius: 1,
                 display: "inline-flex",
                 alignItems: "center",
@@ -83,12 +89,12 @@ const PassDetails = ({ open, onClose, pass }) => {
               />
             </Box>
 
-            <Typography variant="h4" fontWeight={800} sx={{ letterSpacing: 1 }}>
+            <Typography variant="h4" fontWeight={900} mt={2}>
               GATE PASS
             </Typography>
 
-            <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
-              Verification ID: {pass._id?.toUpperCase()}
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              Verification ID: {pass._id}
             </Typography>
 
             <Box
@@ -100,40 +106,36 @@ const PassDetails = ({ open, onClose, pass }) => {
                 py: 0.5,
                 borderRadius: 10,
                 fontWeight: 800,
-                fontSize: "0.8rem",
-                boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+                fontSize: "0.75rem",
+                mt: 2,
               }}
             >
               {pass.status}
             </Box>
           </Grid>
 
-          {/* QR CODE */}
+          {/* ================= QR CODE ================= */}
           <Grid
             item
             xs={12}
             sm={4}
             sx={{
-              mr: { xs: 0, sm: 6 },
               display: "flex",
-              marginLeft: "300px",
-              justifyContent: { xs: "flex-start", sm: "flex-end" },
+              justifyContent: { xs: "center", sm: "flex-end" },
+              mt: { xs: 3, sm: 0 },
             }}
           >
-           {isApproved && pass.qrCode && (
+            {isApproved && (
               <Box
                 sx={{
                   bgcolor: "white",
-                  p: 1,
+                  p: 1.2,
                   borderRadius: 2,
                   boxShadow: "0 8px 20px rgba(0,0,0,0.3)",
                   textAlign: "center",
                 }}
               >
-             <QRCode
-                    size={140}
-                    value={pass.qrCode}
-                  />
+                <QRCode size={140} value={qrValue} />
                 <Typography
                   variant="caption"
                   display="block"
@@ -144,153 +146,55 @@ const PassDetails = ({ open, onClose, pass }) => {
                     fontSize: "0.6rem",
                   }}
                 >
-                  SCAN VALIDATION
+                  SCAN FOR VALIDATION
                 </Typography>
               </Box>
             )}
-             
           </Grid>
         </Grid>
       </Box>
 
+      {/* ================= CONTENT ================= */}
       <DialogContent sx={{ p: 4 }}>
         <Stack spacing={4}>
-          {/* REQUESTER SECTION */}
-          <Box>
-            <Typography
-              variant="subtitle2"
-              color="primary"
-              fontWeight={800}
-              gutterBottom
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <Business fontSize="small" /> REQUESTER INFORMATION
-            </Typography>
-            <Grid container spacing={2}>
-              <DataRow
-                icon={<Person fontSize="small" />}
-                label="Requester Name"
-                value={pass.requesterName}
-              />
-              <DataRow
-                icon={<Email fontSize="small" />}
-                label="Official Email"
-                value={pass.requesterEmail}
-              />
-              <DataRow
-                icon={<Email fontSize="small" />}
-                label="Purpose"
-                value={pass.purpose}
-              />
-            </Grid>
-          </Box>
+          <Section title="REQUESTER INFORMATION" icon={<Business />}>
+            <DataRow icon={<Person />} label="Requester Name" value={pass.requesterName} />
+            <DataRow icon={<Email />} label="Email" value={pass.requesterEmail} />
+            <DataRow icon={<AssignmentInd />} label="Purpose" value={pass.purpose} />
+          </Section>
 
           <Divider />
 
-          {/* ASSET SECTION */}
-          <Box>
-            <Typography
-              variant="subtitle2"
-              color="primary"
-              fontWeight={800}
-              gutterBottom
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <Laptop fontSize="small" /> ASSET & LOGISTICS
-            </Typography>
-            <Grid container spacing={2}>
-              <DataRow
-                icon={<Badge fontSize="small" />}
-                label="Asset Name"
-                value={pass.assetName}
-              />
-              <DataRow
-                icon={<AssignmentInd fontSize="small" />}
-                label="Serial Number"
-                value={pass.assetSerialNo}
-              />
-              <DataRow
-                icon={<AssignmentInd fontSize="small" />}
-                label="Pass Type"
-                value={pass.passType}
-              />
-              <DataRow
-                icon={<Event fontSize="small" />}
-                label="Out Date"
-                value={pass.outDate}
-              />
-              {pass.passType === "RETURNABLE" && (
-                <DataRow
-                  icon={<Event fontSize="small" />}
-                  label="Return Schedule"
-                  value={pass.returnDateTime}
-                />
-              )}
-            </Grid>
-          </Box>
+          <Section title="ASSET DETAILS" icon={<Laptop />}>
+            <DataRow icon={<Badge />} label="Asset Name" value={pass.assetName} />
+            <DataRow icon={<AssignmentInd />} label="Serial Number" value={pass.assetSerialNo} />
+            <DataRow icon={<AssignmentInd />} label="Pass Type" value={pass.passType} />
+            <DataRow icon={<Event />} label="Out Date" value={pass.outDate} />
+            {pass.passType === "RETURNABLE" && (
+              <DataRow icon={<Event />} label="Return Date" value={pass.returnDateTime} />
+            )}
+          </Section>
 
           <Divider />
 
-          {/* VISITOR SECTION */}
-          <Box>
-            <Typography
-              variant="subtitle2"
-              color="primary"
-              fontWeight={800}
-              gutterBottom
-              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-            >
-              <Person fontSize="small" /> VISITOR / CARRY PERSON
-            </Typography>
-            <Grid container spacing={2}>
-              <DataRow
-                icon={<Person fontSize="small" />}
-                label="Visitor Name"
-                value={pass.externalPersonName}
-              />
-              <DataRow
-                icon={<Phone fontSize="small" />}
-                label="Contact"
-                value={pass.externalPersonPhone}
-              />
-              <DataRow
-                icon={<Email fontSize="small" />}
-                label="Visitor Email"
-                value={pass.externalPersonEmail}
-              />
-            </Grid>
-          </Box>
+          <Section title="VISITOR DETAILS" icon={<Person />}>
+            <DataRow icon={<Person />} label="Visitor Name" value={pass.externalPersonName} />
+            <DataRow icon={<Phone />} label="Contact" value={pass.externalPersonPhone} />
+            <DataRow icon={<Email />} label="Visitor Email" value={pass.externalPersonEmail} />
+          </Section>
 
-          {/* PHOTO SECTION */}
           {pass.photo && (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                pt: 2,
-                borderTop: "1px solid #eee",
-              }}
-            >
-              <Typography
-                variant="caption"
-                fontWeight={700}
-                color="text.secondary"
-                mb={1}
-              >
-                VISUAL ASSET VERIFICATION
+            <Box textAlign="center">
+              <Typography fontWeight={700} mb={1}>
+                ASSET PHOTO
               </Typography>
               <Box
                 component="img"
                 src={pass.photo}
                 sx={{
-                  width: "100%",
                   maxWidth: 400,
+                  width: "100%",
                   borderRadius: 3,
-                  maxHeight: 220,
-                  objectFit: "contain",
-                  bgcolor: "#f9f9f9",
-                  p: 1,
                   border: "1px solid #eee",
                 }}
               />
@@ -299,86 +203,58 @@ const PassDetails = ({ open, onClose, pass }) => {
         </Stack>
       </DialogContent>
 
-      <DialogActions
-        sx={{
-          p: 3,
-          borderTop: "1px solid #eee",
-          bgcolor: "#fcfcfc",
-          gap: 2,
-        }}
-      >
+      {/* ================= ACTIONS ================= */}
+      <DialogActions sx={{ p: 3 }}>
         {isApproved && (
           <Button
             fullWidth
             variant="contained"
-            color="primary"
-            startIcon={<Printer size={20} />}
+            startIcon={<Printer size={18} />}
             onClick={handlePrint}
-            sx={{ fontWeight: 700, borderRadius: 2 }}
+            sx={{ fontWeight: 800 }}
           >
-            Print Pass
+            PRINT PASS
           </Button>
         )}
         <Button
-          onClick={onClose}
           fullWidth
           variant="outlined"
-          sx={{
-            borderRadius: 2,
-            fontWeight: 700,
-            color: "#2c5364",
-            borderColor: "#2c5364",
-            "&:hover": {
-              borderColor: "#0f2027",
-              bgcolor: "#f0f0f0",
-            },
-          }}
+          onClick={onClose}
+          sx={{ fontWeight: 700 }}
         >
-          CLOSE PREVIEW
+          CLOSE
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-/* READABLE DATA ROW COMPONENT */
+/* ================= HELPERS ================= */
+const Section = ({ title, icon, children }) => (
+  <Box>
+    <Typography
+      variant="subtitle2"
+      fontWeight={900}
+      color="primary"
+      sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
+    >
+      {icon} {title}
+    </Typography>
+    <Grid container spacing={2}>
+      {children}
+    </Grid>
+  </Box>
+);
+
 const DataRow = ({ icon, label, value }) => (
   <Grid item xs={12} sm={6}>
-    <Box sx={{ display: "flex", alignItems: "flex-start", mb: 1 }}>
-      <Box
-        sx={{
-          mr: 1.5,
-          mt: 0.5,
-          p: 0.5,
-          borderRadius: 1,
-          bgcolor: "#f0f4f8",
-          display: "flex",
-          color: "#2c5364",
-        }}
-      >
-        {icon}
-      </Box>
+    <Box sx={{ display: "flex", gap: 1 }}>
+      <Box sx={{ color: "#2563eb" }}>{icon}</Box>
       <Box>
-        <Typography
-          variant="caption"
-          sx={{
-            color: "text.secondary",
-            fontWeight: 600,
-            textTransform: "uppercase",
-            fontSize: "0.65rem",
-          }}
-        >
+        <Typography variant="caption" fontWeight={700}>
           {label}
         </Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            fontWeight: 700,
-            color: "#2d3436",
-            wordBreak: "break-word",
-            lineHeight: 1.2,
-          }}
-        >
+        <Typography fontWeight={800}>
           {value || "—"}
         </Typography>
       </Box>
