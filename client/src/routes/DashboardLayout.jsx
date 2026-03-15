@@ -32,38 +32,38 @@ const DashboardLayout = () => {
   const [approvedCount, setApprovedCount] = useState(0);
 
   /* ================= FETCH NAVBAR DATA ================= */
-  useEffect(() => {
-    const fetchNavbarData = async () => {
-      try {
-        // ADMIN → Users list
-        if (role === "admin") {
-          const res = await axios.get(`${API}/users`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          setUsers(res.data || []);
-        }
-
-        // ADMIN & HOD → Approved pass count
-        if (role === "admin" || role === "hod") {
-          const passRes = await axios.get(
-            `${API}/passes/approved/count`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          setApprovedCount(passRes.data.count || 0);
-        }
-      } catch (error) {
-        console.error("Navbar data error:", error);
+  /* ================= FETCH NAVBAR DATA ================= */
+useEffect(() => {
+  const fetchNavbarData = async () => {
+    try {
+      // ADMIN → Users list (For the "Total Users" stat box)
+      if (role === "admin") {
+        const res = await axios.get(`${API}/users`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUsers(res.data || []);
       }
-    };
 
+      // ADMIN, HOD, & CSO → Approved pass count
+      // We add 'cso' here so the Navbar stat boxes populate correctly for them
+      if (role === "admin" || role === "hod" || role === "cso") {
+        const passRes = await axios.get(
+          `${API}/passes/approved/count`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setApprovedCount(passRes.data.count || 0);
+      }
+    } catch (error) {
+      console.error("Navbar data error:", error);
+    }
+  };
+
+  if (role && token) {
     fetchNavbarData();
-  }, [role, token]);
+  }
+}, [role, token]);
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f8fafc" }}>

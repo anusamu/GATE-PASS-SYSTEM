@@ -14,16 +14,14 @@ import {
   Typography,
   TextField,
   MenuItem,
-  InputAdornment
+  InputAdornment,
 } from "@mui/material";
-import { 
-  Search,
-  RestartAlt, 
-  PictureAsPdf 
-} from '@mui/icons-material';
+import { Search, RestartAlt, PictureAsPdf } from "@mui/icons-material";
 import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
+// Import your existing Dialog component
 import PassDetails from "../components/PassDetailsDialog";
 
 const API =
@@ -31,11 +29,11 @@ const API =
     ? "https://gate-pass-system-drti.onrender.com"
     : "http://localhost:5000";
 
-const AdminHistory = () => {
+const CsoHistory = () => {
   const [passes, setPasses] = useState([]);
   const [filteredPasses, setFilteredPasses] = useState([]);
-  
-  // States for Dialog/Modal
+
+  /* ================= DIALOG STATE ================= */
   const [open, setOpen] = useState(false);
   const [selectedPass, setSelectedPass] = useState(null);
 
@@ -64,32 +62,27 @@ const AdminHistory = () => {
     }
   };
 
-  /* ================= FILTER LOGIC ================= */
   const applyFilters = () => {
     let data = [...passes];
-
     if (filters.name) {
       data = data.filter((p) =>
         p.requesterName?.toLowerCase().includes(filters.name.toLowerCase())
       );
     }
-
     if (filters.department) {
       data = data.filter(
         (p) => p.department?.toLowerCase() === filters.department.toLowerCase()
       );
     }
-
     if (filters.status) {
       data = data.filter((p) => p.status === filters.status);
     }
-
     if (filters.date) {
       data = data.filter(
-        (p) => new Date(p.createdAt).toISOString().slice(0, 10) === filters.date
+        (p) =>
+          new Date(p.createdAt).toISOString().slice(0, 10) === filters.date
       );
     }
-
     setFilteredPasses(data);
   };
 
@@ -98,33 +91,24 @@ const AdminHistory = () => {
   };
 
   const clearFilters = () => {
-    setFilters({
-      name: "",
-      department: "",
-      status: "",
-      date: "",
-    });
+    setFilters({ name: "", department: "", status: "", date: "" });
   };
 
-  /* ================= DIALOG LOGIC ================= */
+  /* ================= ROW CLICK HANDLER ================= */
   const handleRowClick = (pass) => {
-    setSelectedPass(pass); // Set the clicked pass data
-    setOpen(true);        // Open the dialog
+    setSelectedPass(pass);
+    setOpen(true);
   };
 
-  /* ================= PDF EXPORT ================= */
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text("Pass Request History", 14, 15);
-
     autoTable(doc, {
       startY: 22,
-      head: [
-        ["Pass ID", "Requester", "Department", "Purpose", "Status", "Date"],
-      ],
+      head: [["Pass ID", "Requester", "Department", "Purpose", "Status", "Date"]],
       body: filteredPasses.map((p) => [
-        p._id.slice(-6).toUpperCase(),
+        p._id.slice(-6),
         p.requesterName,
         p.department,
         p.purpose,
@@ -132,21 +116,16 @@ const AdminHistory = () => {
         new Date(p.createdAt).toLocaleDateString(),
       ]),
     });
-
     doc.save("pass-history.pdf");
   };
 
   const getStatusChip = (status) => {
-    const colors = {
-      APPROVED: "success",
-      PENDING: "warning",
-      REJECTED: "error",
-    };
-    return <Chip label={status} color={colors[status]} size="small" sx={{ fontWeight: 600 }} />;
+    const colors = { APPROVED: "success", PENDING: "warning", REJECTED: "error" };
+    return <Chip label={status} color={colors[status]} size="small" />;
   };
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 1 }}>
       <Typography variant="h6" fontWeight={700} mb={2}>
         Pass Request History
       </Typography>
@@ -184,12 +163,9 @@ const AdminHistory = () => {
             <MenuItem value="REJECTED">Rejected</MenuItem>
           </TextField>
           <TextField type="date" label="Date" name="date" value={filters.date} onChange={handleChange} size="small" InputLabelProps={{ shrink: true }} sx={{ minWidth: 160 }} />
-          
           <Stack direction="row" spacing={1} sx={{ ml: { md: "auto" } }}>
             <Button variant="text" color="inherit" onClick={clearFilters} startIcon={<RestartAlt />}>Reset</Button>
-            <Button variant="contained" disableElevation onClick={exportToPDF} startIcon={<PictureAsPdf />} sx={{ fontWeight: 600, px: 3 }}>
-              Export PDF
-            </Button>
+            <Button variant="contained" disableElevation onClick={exportToPDF} startIcon={<PictureAsPdf />} sx={{ fontWeight: 600, px: 3 }}>Export PDF</Button>
           </Stack>
         </Stack>
       </Paper>
@@ -214,26 +190,19 @@ const AdminHistory = () => {
                   key={p._id} 
                   hover 
                   onClick={() => handleRowClick(p)}
-                  sx={{ 
-                    cursor: 'pointer', 
-                    '&:hover': { bgcolor: 'action.hover' } 
-                  }}
+                  sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
                 >
-                  <TableCell>#{p._id.slice(-6).toUpperCase()}</TableCell>
+                  <TableCell>{p._id.slice(-6)}</TableCell>
                   <TableCell>{p.requesterName}</TableCell>
                   <TableCell>{p.department}</TableCell>
-                  <TableCell sx={{ maxWidth: 250, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {p.purpose}
-                  </TableCell>
+                  <TableCell>{p.purpose}</TableCell>
                   <TableCell>{getStatusChip(p.status)}</TableCell>
                   <TableCell>{new Date(p.createdAt).toLocaleDateString()}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                  No records found
-                </TableCell>
+                <TableCell colSpan={6} align="center">No records found</TableCell>
               </TableRow>
             )}
           </TableBody>
@@ -241,7 +210,6 @@ const AdminHistory = () => {
       </TableContainer>
 
       {/* ================= DETAILS DIALOG ================= */}
-      {/* PassDetails component is called here */}
       <PassDetails
         open={open}
         onClose={() => setOpen(false)}
@@ -251,4 +219,4 @@ const AdminHistory = () => {
   );
 };
 
-export default AdminHistory;
+export default CsoHistory;

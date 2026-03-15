@@ -72,29 +72,35 @@ const Sidebar = ({
       { id: "verified", label: "Verified", icon: <QrCodeScanner /> },
       { id: "rejected", label: "Rejected", icon: <Cancel /> },
     ],
+    cso: [
+    { id: "dashboard", label: "CSO Dashboard", icon: <Dashboard /> },
+    { id: "csohistory", label: "Security History", icon: <History /> },
+  ],
   };
 
   /* =========================
      ROUTES (LOGIC ONLY)
   ========================= */
   const routeMap = {
-    dashboard:
-      role === "staff"
-        ? "/dashboard"
-        : role === "hod"
-        ? "/hod/"
-        : role === "admin"
-        ? "/admin/"
-        : "/security/dashboard",
+  dashboard:
+    role === "staff"
+      ? "/dashboard"
+      : role === "hod"
+      ? "/hod/"
+      : role === "admin"
+      ? "/admin/"
+      : role === "cso"
+      ? "/cso/dashboard" // CSO route
+      : "/security/dashboard",
 
-    "my-passes": "/dashboard/mypass",
-    staffhistory: "/dashboard/history",
-    hodhistory: "/hod/history",
-    adminhistory: "/admin/history",
-    verified: "/security/verified",
-    rejected: "/security/rejected",
-  };
-
+  "my-passes": "/dashboard/mypass",
+  staffhistory: "/dashboard/history",
+  hodhistory: "/hod/history",
+  adminhistory: "/admin/history",
+  csohistory: "/cso/history", // CSO history route
+  verified: "/security/verified",
+  rejected: "/security/rejected",
+};
   const menuItems = menuByRole[role] || [];
   const drawerWidth = collapsed ? MINI_WIDTH : FULL_WIDTH;
 
@@ -102,20 +108,22 @@ const Sidebar = ({
      ACTIVE TAB SYNC (NO UI CHANGE)
   ========================= */
   useEffect(() => {
-const path = location.pathname;
+  const path = location.pathname;
 
-if (path.startsWith("/dashboard/history")) {
-  setActiveTab("staffhistory");
-} else if (path.startsWith("/hod/history")) {
-  setActiveTab("hodhistory");
-} else if (path.includes("/mypass")) {
-  setActiveTab("my-passes");
-} else if (path.startsWith("/admin/history")) {
-  setActiveTab("adminhistory");
-} else {
-  setActiveTab("dashboard");
-}
-  }, [location.pathname, setActiveTab]);
+  if (path.startsWith("/dashboard/history")) {
+    setActiveTab("staffhistory");
+  } else if (path.startsWith("/hod/history")) {
+    setActiveTab("hodhistory");
+  } else if (path.startsWith("/admin/history")) {
+    setActiveTab("adminhistory");
+  } else if (path.startsWith("/cso/history")) {
+    setActiveTab("csohistory"); // Sync CSO history tab
+  } else if (path.includes("/mypass")) {
+    setActiveTab("my-passes");
+  } else {
+    setActiveTab("dashboard");
+  }
+}, [location.pathname, setActiveTab]);
 
   /* =========================
      SIDEBAR CONTENT (UI SAME)

@@ -6,6 +6,7 @@ const {
   verifyQRCode,
   markPassAsUsed,
 } = require("../controllers/SecurityController");
+const csoController = require("../controllers/csoController");
 const {
   login,
   staffRegister,
@@ -111,7 +112,11 @@ router.put("/mark-used/:id", markPassAsUsed);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 
+router.get("/pending", protect, csoController.getAllPendingPasses);
 
+router.put("/approve/:id", protect, csoController.approvePassByCso);
+
+router.put("/reject/:id", protect, csoController.rejectPassByCso);
 
 
 module.exports = router;

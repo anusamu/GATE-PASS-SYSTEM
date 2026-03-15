@@ -276,7 +276,101 @@ const Navbar = ({
       </Stack>
     );
   }
+/* ================= CSO (Security) ================= */
+if (role === "cso") {
+  return (
+    <Stack spacing={4} maxWidth="1400px" mx="auto" width="100%">
+      <Card 
+        sx={{ 
+          p: { xs: 2.5, md: 4 }, 
+          borderRadius: 5, 
+          background: GRADIENT, // Uses your #2563eb -> #22c55e theme
+          color: "#fff" 
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack direction="row" spacing={2} alignItems="center">
+            <IconButton
+              onClick={() => setMobileOpen(true)}
+              sx={{ display: { xs: "inline-flex", sm: "none" }, color: "#fff" }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <AdminPanelSettingsIcon fontSize="large" />
+            <Typography variant="h5" fontWeight={900}>
+              CSO DASHBOARD
+            </Typography>
+          </Stack>
 
+          {/* DESKTOP ACTIONS */}
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            sx={{ display: { xs: "none", sm: "flex" } }}
+          >
+            {/* Added a placeholder action for Security - e.g., Scan/Verify */}
+            {/* <Button
+              startIcon={<CheckCircleIcon />}
+              sx={{
+                bgcolor: "#fff",
+                color: "#166534",
+                fontWeight: 900,
+                px: 4,
+                py: 1.2,
+                borderRadius: 3,
+                "&:hover": { bgcolor: "#f0f0f0" },
+              }}
+            >
+              VERIFY PASS
+            </Button> */}
+            <ProfileMenu />
+          </Stack>
+        </Stack>
+
+        {/* MOBILE ACTION ROW */}
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent="center"
+          mt={2}
+          sx={{ display: { xs: "flex", sm: "none" } }}
+        >
+          {/* <Button
+            startIcon={<CheckCircleIcon />}
+            sx={{
+              bgcolor: "#fff",
+              color: "#166534",
+              fontWeight: 900,
+              px: 3,
+              py: 1,
+              borderRadius: 3,
+            }}
+          >
+            VERIFY
+          </Button> */}
+          <ProfileMenu />
+        </Stack>
+        <Typography mt={1} sx={{ opacity: 0.9 }}>
+          Chief Security Officer: Oversee entry logs and security clearance
+        </Typography>
+      </Card>
+
+      {/* <Grid container spacing={4}>
+        <StatBox
+          title="Verified Today"
+          value={approvedCount}
+          icon={<CheckCircleIcon fontSize="large" />}
+        />
+        <StatBox
+          title="Security Staff"
+          value={users.filter(u => u.role === 'security').length || 0}
+          icon={<PeopleIcon fontSize="large" />}
+        />
+      </Grid> */}
+    </Stack>
+  );
+}
   /* ================= HOD ================= */
   if (role === "hod") {
     return (

@@ -9,37 +9,32 @@ import {
   Divider,
   ListItemIcon,
   Tooltip,
+  Stack,
 } from "@mui/material";
 import {
   Logout as LogoutIcon,
-  Person as PersonIcon,
   Business as BusinessIcon,
   Email as EmailIcon,
+  Person as PersonIcon,
 } from "@mui/icons-material";
 
 const ProfileMenu = () => {
   const [anchorEl, setAnchorEl] = useState(null);
 
-const storedUser = localStorage.getItem("user");
+  const storedUser = localStorage.getItem("user");
+  const user = storedUser ? JSON.parse(storedUser) : {
+    name: "User",
+    email: "user@example.com",
+    role: "employee",
+    department: "ADMIN",
+    photo: "",
+  };
 
-const user = storedUser
-  ? JSON.parse(storedUser)
-  : {
-      name: "User",
-      email: "user@example.com",
-      role: "employee",
-      department: "Operations",
-      photo: "",
-    };
+  const { name, email, role, department, photo } = user;
 
-const name = user.name || "User";
-const email = user.email || "user@example.com";
-const role = user.role || "employee";
-const department = user.department || "Operations";
-const photo = user.photo || "";
-  // Gradient Theme Colors
-  const mainGradient = "linear-gradient(135deg,#2563eb,#22c55e)";
-
+  // Theme Colors
+  const mainGradient = "linear-gradient(135deg, #2563eb 0%, #22c55e 100%)";
+  
   const handleOpen = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
@@ -50,29 +45,29 @@ const photo = user.photo || "";
 
   return (
     <>
-      <Tooltip title="Account settings">
-        <IconButton 
-          onClick={handleOpen} 
-          sx={{ 
-            p: '2px', 
+      <Tooltip title="Account Settings">
+        <IconButton onClick={handleOpen} sx={{ p: 0.5 }}>
+          {/* Avatar Ring */}
+          <Box sx={{
+            p: '2px',
+            borderRadius: '50%',
             background: mainGradient,
-            '&:hover': { opacity: 0.9 }
-          }}
-        >
-          <Avatar 
-            src={photo} 
-            alt={name} 
-            sx={{ 
-              width: 36, 
-              height: 36, 
-              border: '2px solid white',
-              background: '#fff',
-              color: '#007cf0',
-              fontWeight: 'bold'
-            }}
-          >
-            {!photo && name.charAt(0).toUpperCase()}
-          </Avatar>
+            display: 'flex',
+          }}>
+            <Avatar
+              src={photo}
+              sx={{
+                width: 36,
+                height: 36,
+                border: '2px solid white',
+                bgcolor: 'white',
+                color: '#2563eb',
+                fontWeight: 700
+              }}
+            >
+              {!photo && name.charAt(0).toUpperCase()}
+            </Avatar>
+          </Box>
         </IconButton>
       </Tooltip>
 
@@ -81,92 +76,111 @@ const photo = user.photo || "";
         open={Boolean(anchorEl)}
         onClose={handleClose}
         disableScrollLock
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
         PaperProps={{
-          elevation: 4,
+          elevation: 0,
           sx: {
-            width: 300,
+            width: 290,
             mt: 1.5,
-            borderRadius: 4,
+            borderRadius: '20px',
+            // This creates the GRADIENT BORDER
+            background: mainGradient, 
+            padding: '3px', // The thickness of the border
             overflow: 'visible',
-            filter: 'drop-shadow(0px 10px 20px rgba(0,0,0,0.1))',
-            '&:before': { // The little arrow on top
-              content: '""',
-              display: 'block',
-              position: 'absolute',
-              top: 0,
-              right: 18,
-              width: 10,
-              height: 10,
-              bgcolor: 'background.paper',
-              transform: 'translateY(-50%) rotate(45deg)',
-              zIndex: 0,
-            },
+            filter: 'drop-shadow(0px 10px 20px rgba(0,0,0,0.15))',
           },
         }}
       >
-        {/* Header Section with Gradient Background */}
+        {/* INNER CONTENT CONTAINER */}
         <Box sx={{ 
-          background: mainGradient, 
-          m: 1, 
-          p: 3, 
-          borderRadius: 3, 
-          textAlign: 'center',
-          color: 'white'
+          bgcolor: 'white', 
+          borderRadius: '17px', // Slightly less than outer to fit perfectly
+          overflow: 'hidden' 
         }}>
-          <Avatar 
-            src={photo} 
-            sx={{ 
-              width: 60, 
-              height: 60, 
-              mx: 'auto', 
-              mb: 1.5, 
-              border: '3px solid rgba(255,255,255,0.4)',
-              boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
-            }} 
-          />
-          <Typography variant="subtitle1" fontWeight={800} sx={{ lineHeight: 1.2 }}>
-            {name}
-          </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.9, fontWeight: 500 }}>
-            {role.toUpperCase()}
-          </Typography>
+          
+          {/* Header */}
+          <Box sx={{ p: 3, textAlign: 'center', bgcolor: 'rgba(37, 99, 235, 0.04)' }}>
+            <Avatar
+              src={photo}
+              sx={{
+                width: 60,
+                height: 60,
+                mx: 'auto',
+                mb: 1.5,
+                boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                border: '2px solid white',
+                background: mainGradient
+              }}
+            >
+              {!photo && name.charAt(0).toUpperCase()}
+            </Avatar>
+            <Typography variant="subtitle1" fontWeight={800} color="#1e293b">
+              {name}
+            </Typography>
+            <Typography variant="caption" sx={{ 
+              color: '#2563eb', 
+              fontWeight: 700, 
+              bgcolor: '#eff6ff', 
+              px: 1.5, 
+              py: 0.3, 
+              borderRadius: '10px',
+              textTransform: 'uppercase'
+            }}>
+              {role}
+            </Typography>
+          </Box>
+
+          <Divider sx={{ borderStyle: 'dashed' }} />
+
+          {/* Info Items */}
+          <Box sx={{ p: 1 }}>
+            <InfoItem icon={<EmailIcon />} label="Email" value={email} />
+            <InfoItem icon={<BusinessIcon />} label="Dept" value={department} />
+          </Box>
+
+          <Divider sx={{ borderStyle: 'dashed' }} />
+
+          {/* Footer Action */}
+          <Box sx={{ p: 1.5 }}>
+            <MenuItem
+              onClick={handleLogout}
+              sx={{
+                borderRadius: '12px',
+                py: 1.2,
+                color: '#ef4444',
+                fontWeight: 700,
+                '&:hover': { bgcolor: '#fef2f2' },
+                transition: '0.2s'
+              }}
+            >
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" sx={{ color: '#ef4444' }} />
+              </ListItemIcon>
+              Logout
+            </MenuItem>
+          </Box>
         </Box>
-
-        {/* Info Section */}
-        <Box sx={{ py: 1 }}>
-          <MenuItem disabled sx={{ opacity: "1 !important", py: 0.5 }}>
-            <ListItemIcon><EmailIcon fontSize="small" /></ListItemIcon>
-            <Typography variant="body2" color="text.primary">{email}</Typography>
-          </MenuItem>
-          <MenuItem disabled sx={{ opacity: "1 !important", py: 0.5 }}>
-            <ListItemIcon><BusinessIcon fontSize="small" /></ListItemIcon>
-            <Typography variant="body2" color="text.primary">{department}</Typography>
-          </MenuItem>
-        </Box>
-
-        <Divider sx={{ my: 1, borderStyle: 'dashed' }} />
-
-        {/* Action Section */}
-        <MenuItem 
-          onClick={handleLogout} 
-          sx={{ 
-            mx: 1, 
-            borderRadius: 2,
-            color: 'error.main',
-            fontWeight: 600,
-            '&:hover': { bgcolor: '#fff5f5' }
-          }}
-        >
-          <ListItemIcon>
-            <LogoutIcon fontSize="small" sx={{ color: 'error.main' }} />
-          </ListItemIcon>
-          Logout
-        </MenuItem>
       </Menu>
     </>
   );
 };
+
+// Sub-component for clean rows
+const InfoItem = ({ icon, label, value }) => (
+  <Box sx={{ display: 'flex', alignItems: 'center', p: 1.5, gap: 2 }}>
+    <Box sx={{ color: '#94a3b8', display: 'flex' }}>
+      {React.cloneElement(icon, { fontSize: "small" })}
+    </Box>
+    <Box sx={{ overflow: 'hidden' }}>
+      <Typography variant="caption" display="block" color="#94a3b8" fontWeight={600} sx={{ lineHeight: 1 }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" fontWeight={600} color="#334155" noWrap>
+        {value}
+      </Typography>
+    </Box>
+  </Box>
+);
 
 export default ProfileMenu;

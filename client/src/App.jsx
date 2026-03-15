@@ -16,6 +16,8 @@ import RoleRoute from "./routes/RoleRoute";
 import Adminhistory from "./pages/Adminhistory";
 import SecurityDashboard from "./pages/SecurityDashboard";
 import ResetPassword from "./components/ResetPassword";
+import CSODashboard from "./pages/CsoDashboard";
+import CsoHistory from "./pages/CsoHistory";
 
 function App() {
   return (
@@ -50,7 +52,23 @@ function App() {
           <Route index element={<HodDashboard />} />
           <Route path="history" element={<HodHistory />} />
         </Route>
-
+  {/* ================= cso================= */}
+/* ================= CSO ================= */
+<Route
+  path="/cso" // Base path should be lowercase to match standard routing
+  element={
+    <RoleRoute role="cso">
+      <DashboardLayout />
+    </RoleRoute>
+  }
+>
+  {/* path="/cso/dashboard" */}
+  <Route path="dashboard" element={<CSODashboard />} /> 
+  
+  {/* path="/cso/history" -> Matches Sidebar's routeMap.csohistory */}
+  <Route path="history" element={<CsoHistory />} /> 
+</Route>
+        
         {/* ================= ADMIN ================= */}
         <Route
           path="/admin"

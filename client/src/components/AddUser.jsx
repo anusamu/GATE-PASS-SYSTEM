@@ -51,6 +51,7 @@ const AddUserDialog = ({
             <MenuItem value="staff">STAFF</MenuItem>
             <MenuItem value="admin">ADMIN</MenuItem>
             <MenuItem value="security">SECURITY</MenuItem>
+            <MenuItem value="cso">CSO</MenuItem>
           </TextField>
 
           {(formData.role === "hod" || formData.role === "staff") && (
