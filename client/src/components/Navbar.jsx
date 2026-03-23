@@ -209,7 +209,7 @@ const Navbar = ({
   sx={{ 
     fontSize: 50, 
     cursor: "pointer",
-    ml: 70,   // move right
+    ml: 4,   // move right
     mt: 8   // move down
   }} 
 />
