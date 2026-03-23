@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Pass = require("../models/Pass");
 const bcrypt = require("bcryptjs");
+const Settings = require('../models/Settings');
 /* =========================
    ADMIN ROLE CHECK
 ========================= */
@@ -165,6 +166,46 @@ exports.getAllPassHistory = async (req, res) => {
     res.status(500).json({
       message: "Failed to fetch pass history",
     });
+  }
+};
+
+
+// @desc    Get the dynamic CC email list
+// @route   GET /api/admin/settings/cc
+exports.getCCList = async (req, res) => {
+  try {
+    const settings = await Settings.findOne({ key: "gate_pass_config" });
+    // Return empty array if no settings found yet
+    res.status(200).json(settings ? settings.ccEmails : []);
+  } catch (error) {
+    console.error("GET CC LIST ERROR:", error);
+    res.status(500).json({ message: "Failed to fetch CC list" });
+  }
+};
+
+// @desc    Update the dynamic CC email list
+// @route   POST /api/admin/settings/cc
+exports.updateCCList = async (req, res) => {
+  try {
+    const { emails } = req.body;
+
+    if (!Array.isArray(emails)) {
+      return res.status(400).json({ message: "Emails must be provided as an array" });
+    }
+
+    const updatedSettings = await Settings.findOneAndUpdate(
+      { key: "gate_pass_config" },
+      { ccEmails: emails },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({
+      message: "CC List updated successfully",
+      ccEmails: updatedSettings.ccEmails
+    });
+  } catch (error) {
+    console.error("UPDATE CC LIST ERROR:", error);
+    res.status(500).json({ message: "Failed to update CC list" });
   }
 };
 

@@ -7,6 +7,7 @@ const path = require("path");
 const fs = require("fs");
 const QRCode = require("qrcode");
 const { v4: uuidv4 } = require("uuid");
+const Settings = require('../models/Settings');
 
 
 const isValidEmail = (email) =>
@@ -168,7 +169,114 @@ exports.pendingApprovals = async (req, res) => {
 
 /* =====================================================
    HOD APPROVE PASS
-===================================================== */
+// ===================================================== */
+// exports.approvePass = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     if (!mongoose.Types.ObjectId.isValid(id)) {
+//       return res.status(400).json({ message: "Invalid Pass ID" });
+//     }
+
+//     const pass = await Pass.findById(id);
+//     if (!pass) return res.status(404).json({ message: "Pass not found" });
+
+//     if (pass.hod.toString() !== req.user._id.toString()) {
+//       return res.status(403).json({ message: "Not authorized" });
+//     }
+
+//     if (pass.status !== "PENDING") {
+//       return res.status(400).json({ message: `Already ${pass.status}` });
+//     }
+
+//     /* ================== QR GENERATION ================== */
+//     if (!pass.qrCode) {
+//       const uniqueCode = uuidv4(); // UNIQUE PASS CODE
+//       pass.qrCode = uniqueCode;
+
+//       // Optional: QR image (base64) if you want to show in email / card
+//       const qrImage = await QRCode.toDataURL(uniqueCode);
+//       pass.qrImage = qrImage; // add field if needed
+//     }
+
+//     pass.status = "APPROVED";
+//     pass.used = false;
+//     pass.approvedAt = new Date();
+
+//     await pass.save();
+//     /* =================================================== */
+//  const recipients = buildRecipients(
+//       pass.requesterEmail,
+//       pass.externalPersonEmail
+//     );
+
+//     if (recipients.length) {
+//       sendMail(
+//         recipients,
+//         "Gate Pass Approved",
+//        `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
+//   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    
+//     <div style="background: linear-gradient(135deg, #048cedff 0%, #09f097ff 100%); padding: 30px; text-align: center;">
+//       <img 
+//   src="https://gate-pass-system-kappa.vercel.app/tp-logo.png"
+//   alt="Technopark"
+//   style="width:180px; filter:brightness(0) invert(1);"
+// />
+//     </div>
+
+//     <div style="padding: 40px 30px;">
+//       <h2 style="color: #333; margin-top: 0; font-size: 24px; font-weight: 800;">Gate Pass Approved</h2>
+      
+//       <p style="color: #555; font-size: 16px;">Hello,</p>
+      
+//       <p style="color: #555; font-size: 16px;">
+//         Good news! Your gate pass for the asset 
+//         <strong style="color: #007cf0;">${pass.assetName}</strong>
+//         (Serial: <strong>${pass.assetSerialNo}</strong>) has been officially approved.
+//       </p>
+
+//       <div style="background-color: #f8fafb; border-radius: 8px; padding: 20px; border-left: 4px solid #00dfd8; margin: 25px 0;">
+//         <p style="margin: 0; font-size: 14px; color: #666;">
+//           You can now view your digital pass and download the PDF copy for security verification at the gate.
+//         </p>
+//       </div>
+
+//       <div style="text-align: center; margin-top: 30px;">
+//         <a href="${process.env.BACKEND_URL}/pass/view/${pass._id}" 
+//            style="background: linear-gradient(135deg, #007cf0 0%, #00dfd8 100%); 
+//                   color: white; 
+//                   padding: 14px 32px; 
+//                   text-decoration: none; 
+//                   border-radius: 6px; 
+//                   font-weight: bold; 
+//                   display: inline-block;
+//                   box-shadow: 0 4px 10px rgba(0,124,240,0.3);">
+//            View & Download Pass
+//         </a>
+//       </div>
+//     </div>
+//   </div>
+// </div>
+//     `  , [
+//                // ✅ CC example
+//        "happyeboy369@gmail.com"  // ✅ multiple CC allowed
+//     ]
+//       ).catch(console.error);
+//     }
+
+
+//     res.json({
+//       message: "Gate pass approved & QR generated",
+//       pass,
+//     });
+//   } catch (error) {
+//     console.error("APPROVE PASS ERROR:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+ // Import the new model
+
 exports.approvePass = async (req, res) => {
   try {
     const { id } = req.params;
@@ -190,12 +298,10 @@ exports.approvePass = async (req, res) => {
 
     /* ================== QR GENERATION ================== */
     if (!pass.qrCode) {
-      const uniqueCode = uuidv4(); // UNIQUE PASS CODE
+      const uniqueCode = uuidv4(); 
       pass.qrCode = uniqueCode;
-
-      // Optional: QR image (base64) if you want to show in email / card
       const qrImage = await QRCode.toDataURL(uniqueCode);
-      pass.qrImage = qrImage; // add field if needed
+      pass.qrImage = qrImage; 
     }
 
     pass.status = "APPROVED";
@@ -203,8 +309,13 @@ exports.approvePass = async (req, res) => {
     pass.approvedAt = new Date();
 
     await pass.save();
-    /* =================================================== */
- const recipients = buildRecipients(
+
+    /* ================== DYNAMIC CC FETCH ================== */
+    // Fetch the CC list set by Admin from the database
+    const config = await Settings.findOne({ key: "gate_pass_config" });
+    const dynamicCCList = config ? config.ccEmails : ["happyeboy369@gmail.com"]; // Fallback email
+
+    const recipients = buildRecipients(
       pass.requesterEmail,
       pass.externalPersonEmail
     );
@@ -213,57 +324,29 @@ exports.approvePass = async (req, res) => {
       sendMail(
         recipients,
         "Gate Pass Approved",
-       `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
-  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-    
-    <div style="background: linear-gradient(135deg, #048cedff 0%, #09f097ff 100%); padding: 30px; text-align: center;">
-      <img 
-  src="https://gate-pass-system-kappa.vercel.app/tp-logo.png"
-  alt="Technopark"
-  style="width:180px; filter:brightness(0) invert(1);"
-/>
-    </div>
-
-    <div style="padding: 40px 30px;">
-      <h2 style="color: #333; margin-top: 0; font-size: 24px; font-weight: 800;">Gate Pass Approved</h2>
-      
-      <p style="color: #555; font-size: 16px;">Hello,</p>
-      
-      <p style="color: #555; font-size: 16px;">
-        Good news! Your gate pass for the asset 
-        <strong style="color: #007cf0;">${pass.assetName}</strong>
-        (Serial: <strong>${pass.assetSerialNo}</strong>) has been officially approved.
-      </p>
-
-      <div style="background-color: #f8fafb; border-radius: 8px; padding: 20px; border-left: 4px solid #00dfd8; margin: 25px 0;">
-        <p style="margin: 0; font-size: 14px; color: #666;">
-          You can now view your digital pass and download the PDF copy for security verification at the gate.
-        </p>
-      </div>
-
-      <div style="text-align: center; margin-top: 30px;">
-        <a href="${process.env.BACKEND_URL}/pass/view/${pass._id}" 
-           style="background: linear-gradient(135deg, #007cf0 0%, #00dfd8 100%); 
-                  color: white; 
-                  padding: 14px 32px; 
-                  text-decoration: none; 
-                  border-radius: 6px; 
-                  font-weight: bold; 
-                  display: inline-block;
-                  box-shadow: 0 4px 10px rgba(0,124,240,0.3);">
-           View & Download Pass
-        </a>
-      </div>
-    </div>
-  </div>
-</div>
-    `  , [
-               // ✅ CC example
-       "happyeboy369@gmail.com"  // ✅ multiple CC allowed
-    ]
+        `<div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 40px 10px; line-height: 1.6;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div style="background: linear-gradient(135deg, #048cedff 0%, #09f097ff 100%); padding: 30px; text-align: center;">
+              <img src="https://gate-pass-system-kappa.vercel.app/tp-logo.png" alt="Technopark" style="width:180px; filter:brightness(0) invert(1);"/>
+            </div>
+            <div style="padding: 40px 30px;">
+              <h2 style="color: #333; margin-top: 0; font-size: 24px; font-weight: 800;">Gate Pass Approved</h2>
+              <p style="color: #555; font-size: 16px;">Hello,</p>
+              <p style="color: #555; font-size: 16px;">
+                Good news! Your gate pass for the asset <strong style="color: #007cf0;">${pass.assetName}</strong> (Serial: <strong>${pass.assetSerialNo}</strong>) has been officially approved.
+              </p>
+              <div style="background-color: #f8fafb; border-radius: 8px; padding: 20px; border-left: 4px solid #00dfd8; margin: 25px 0;">
+                <p style="margin: 0; font-size: 14px; color: #666;">You can now view your digital pass and download the PDF copy for security verification at the gate.</p>
+              </div>
+              <div style="text-align: center; margin-top: 30px;">
+                <a href="${process.env.BACKEND_URL}/pass/view/${pass._id}" style="background: linear-gradient(135deg, #007cf0 0%, #00dfd8 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; box-shadow: 0 4px 10px rgba(0,124,240,0.3);">View & Download Pass</a>
+              </div>
+            </div>
+          </div>
+        </div>`,
+        dynamicCCList // ✅ Now using the dynamic list from DB
       ).catch(console.error);
     }
-
 
     res.json({
       message: "Gate pass approved & QR generated",
@@ -274,7 +357,6 @@ exports.approvePass = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 exports.getRecentPasses = async (req, res) => {
   try {
     const passes = await Pass.find({ requester: req.user._id })
